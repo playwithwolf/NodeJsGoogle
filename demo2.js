@@ -12,5 +12,5 @@ app.use(bodyParser.urlencoded({ extended: true })); // 解析URL编码的请求�
 app.use(myRouter);
 app.use(myRouter2);
 app.listen(port, () => {  
-    console.log('Server running at http://127.0.0.1:' + port + '/');  
+    console.log('baijie Server running');  
 });  

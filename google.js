@@ -48,14 +48,25 @@ router.post('/auth',  async (req, res) => {
 
     //const url = 'https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher&response_type=code&access_type=offline&redirect_uri=https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback&client_id=846278508720-cp11mkt0hrh1nihq1lklaj8qsio9vva9.apps.googleusercontent.com&flowName=GeneralOAuthFlow';  // 构造带有参数的URL  
 
-    const options  = {
-      hostname: 'https://accounts.google.com/o/oauth2/auth/',
-      path:  'oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher&response_type=code&access_type=offline&redirect_uri=https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback&client_id=846278508720-cp11mkt0hrh1nihq1lklaj8qsio9vva9.apps.googleusercontent.com&flowName=GeneralOAuthFlow',
-      method: 'GET'
-    }
+    // const options  = {
+    //   hostname: 'https://accounts.google.com/o/oauth2/auth/',
+    //   path:  'oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher&response_type=code&access_type=offline&redirect_uri=https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback&client_id=846278508720-cp11mkt0hrh1nihq1lklaj8qsio9vva9.apps.googleusercontent.com&flowName=GeneralOAuthFlow',
+    //   method: 'GET'
+    // }
 
-    
-    https.request(options, (response) => {  
+    const queryParams = new URLSearchParams({
+      scope: 'https://www.googleapis.com/auth/androidpublisher',
+      redirect_uri: 'https://nodejsgoogle.onrender.com/callback',
+      flowName: 'GeneralOAuthFlow',
+      access_type: 'offline',
+      response_type: 'code',
+      client_id: CLIENT_ID,
+    });
+
+    const url = `https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?${queryParams}`
+    console.log(url);
+
+    https.get(url, (response) => {  
       let data = '';  
       response.on('data', (chunk) => {  
         data += chunk;  

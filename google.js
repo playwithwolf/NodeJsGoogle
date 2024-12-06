@@ -55,15 +55,15 @@ router.post('/auth',  async (req, res) => {
     // }
 
     const queryParams = new URLSearchParams({
-      scope: 'https://www.googleapis.com/auth/androidpublisher',
-      redirect_uri: 'https://nodejsgoogle.onrender.com/callback',
-      flowName: 'GeneralOAuthFlow',
+      scope: 'https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher',
+      redirect_uri: 'https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback',
       access_type: 'offline',
       response_type: 'code',
       client_id: CLIENT_ID,
+      approval_prompt: 'force',
     });
 
-    const url = `https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?${queryParams}`
+    const url = `https://accounts.google.com/o/oauth2/auth?${queryParams}`
     console.log(url);
 
     https.get(url, (response) => {  

@@ -46,6 +46,21 @@ router.post('/auth',  async (req, res) => {
     }  
 
 
+    const url = 'accounts.google.com/o/oauth2/auth/oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher&response_type=code&access_type=offline&redirect_uri=https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback&client_id='+CLIENT_ID+'&flowName=GeneralOAuthFlow';  // 构造带有参数的URL  
+
+    https.get(url, (response) => {  
+      let data = '';  
+      response.on('data', (chunk) => {  
+        data += chunk;  
+      });  
+      response.on('end', () => {  
+        console.log(data);  
+      });  
+    }).on('error', (error) => {  
+      console.error('Error:', error);  
+    });  
+
+
 });
 
 module.exports = router;

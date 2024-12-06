@@ -46,7 +46,7 @@ router.post('/auth',  async (req, res) => {
     }  
 
 
-    const url = 'accounts.google.com/o/oauth2/auth/oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher&response_type=code&access_type=offline&redirect_uri=https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback&client_id=846278508720-cp11mkt0hrh1nihq1lklaj8qsio9vva9.apps.googleusercontent.com&flowName=GeneralOAuthFlow';  // 构造带有参数的URL  
+    const url = 'https://accounts.google.com/o/oauth2/auth/oauthchooseaccount?scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fandroidpublisher&response_type=code&access_type=offline&redirect_uri=https%3A%2F%2Fnodejsgoogle.onrender.com%2Fcallback&client_id=846278508720-cp11mkt0hrh1nihq1lklaj8qsio9vva9.apps.googleusercontent.com&flowName=GeneralOAuthFlow';  // 构造带有参数的URL  
 
     https.get(url, (response) => {  
       let data = '';  

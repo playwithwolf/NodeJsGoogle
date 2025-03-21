@@ -50,7 +50,7 @@ router.post('/amazonAuth',  async (req, res) => {
                    console.log("response = "+response.data);
                  // const dataMap = deepClone(response.data);
 
-                //  console.log("email = "+dataMap.get("email"));
+                 console.log("email = "+response.data.email);
                   // 返回响应数据
                   //res.json(response);
 

@@ -34,10 +34,10 @@ router.post('/amazonAuth',  async (req, res) => {
                   const response = await axios.get('https://api.amazon.com/user/profile', { headers });
               
                   // 返回响应数据
-                  res.json(response.data);
+                  res.json(response);
 
             }catch(error){
-                
+                console.error('profile Error:', error);
             }
         }
          

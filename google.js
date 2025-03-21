@@ -28,3 +28,21 @@ router.post('/auth',  async (req, res) => {
 });
 
 module.exports = router;
+
+//login,auth, googs list, charge, 
+
+//广告 裸包跑起来，聚合 facebook，unity，ironsource
+//cocos creator ,js call android native，拉起 admob，callback to cocos js
+//充值校验
+// 你好外星人 项目，出包 提交googleplay
+//建立 完整的 打包流程和环境
+//完整的文档 -> 入库
+
+
+
+//rustore
+
+//巴扎
+//telegram
+
+

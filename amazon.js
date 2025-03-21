@@ -8,7 +8,8 @@ router.post('/amazonAuth',  async (req, res) => {
     console.log(req.body);
     console.log(req.body.t3token);
     console.log(req.body.t3userid);
-
+    console.log(req.body.appid);
+    
     const url = `https://api.amazon.com/auth/o2/tokeninfo?access_token=${req.body.t3token}`;
 
     try {
@@ -17,6 +18,24 @@ router.post('/amazonAuth',  async (req, res) => {
         console.log("---------------1------------");
         console.log(response.data);
         console.log("---------------2------------");
+        if(response.data.app_id == req.body.appid && req.body.t3userid == response.data.user_id ){
+            console.log("---------------验证成功------------");
+            try{
+
+                const headers = {
+                    'Authorization': `bearer ${req.body.t3token}`
+                  };
+              
+                  // 使用 Axios 发送 GET 请求
+                  const response = await axios.get('https://api.amazon.com/user/profile', { headers });
+              
+                  // 返回响应数据
+                  res.json(response.data);
+
+            }catch(error){
+                
+            }
+        }
          
     } catch (error) {
         console.error('Error fetching token info:', error);

@@ -14,7 +14,7 @@ router.post('/amazonAuth',  async (req, res) => {
 
     try {
         const response = await axios.get(url);
-        console.log(response);
+        //console.log(response);
         console.log("---------------1------------");
         console.log(response.data);
         console.log("---------------2------------");

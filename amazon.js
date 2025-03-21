@@ -23,7 +23,7 @@ router.post('/amazonAuth',  async (req, res) => {
         console.log("req.body.t3userid:"+ req.body.t3userid);
         console.log("response.data.user_id:"+ response.data.user_id);
         if(response.data.app_id == req.body.amazonappid && req.body.t3userid == response.data.user_id ){
-            console.log("---------------验证成功------------");
+            console.log("---------------ok------------");
             try{
 
                 const headers = {

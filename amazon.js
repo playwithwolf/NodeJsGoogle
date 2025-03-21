@@ -3,7 +3,22 @@ const axios = require('axios');
 const https = require('https');
 const router = express.Router();
  
-
+function deepClone(obj, hash = new WeakMap()) {
+    if (typeof obj !== 'object' || obj === null) return obj;
+  
+    if (hash.has(obj)) return hash.get(obj);
+  
+    const result = Array.isArray(obj) ? [] : {};
+    hash.set(obj, result);
+  
+    for (const key in obj) {
+      if (obj.hasOwnProperty(key)) {
+        result[key] = deepClone(obj[key], hash);
+      }
+    }
+  
+    return result;
+  }
 router.post('/amazonAuth',  async (req, res) => {
     console.log(req.body);
     console.log(req.body.t3token);
@@ -33,6 +48,7 @@ router.post('/amazonAuth',  async (req, res) => {
                   // 使用 Axios 发送 GET 请求
                   const response = await axios.get('https://api.amazon.com/user/profile', { headers });
                   console.log("response = "+response);
+                  const dataMap = deepClone(response.data);
                   // 返回响应数据
                   //res.json(response);
 

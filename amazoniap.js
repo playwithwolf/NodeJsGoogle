@@ -53,8 +53,8 @@ router.post('/amazoniapverify',  async (req, res) => {
     const userId = req.body.userId;
     console.log(req.body.receiptId);
     const receiptId = req.body.receiptId;
-    console.log(req.body.productId);
-    const productId = req.body.productId;
+    console.log(req.body.produceId);
+    const productId = req.body.produceId;
     
    // const url = `https://api.amazon.com/auth/o2/tokeninfo?access_token=${req.body.t3token}`;
    const urlheadersandbox = 'https://appstore-sdk.amazon.com/sandbox'
@@ -75,12 +75,12 @@ router.post('/amazoniapverify',  async (req, res) => {
         } 
 
         console.log("---------------response.data.cancelReason------------" + response.data.cancelReason);
-        console.log("---------------response.data.productId------------" + response.data.productId);
-        console.log("---------------productId------------" + productId);
+        console.log("---------------response.data.productId------------" + response.data.produceId);
+        console.log("---------------productId------------" + produceId);
         console.log("---------------response.data.receiptId------------" + response.data.receiptId);
         console.log("---------------receiptId------------" + receiptId);
 
-        if(response.data.productId == productId && response.data.receiptId == receiptId && response.data.cancelReason==null){
+        if(response.data.produceId == produceId && response.data.receiptId == receiptId && response.data.cancelReason==null){
           console.log("--------- 购买成功 ----------");
         }
          

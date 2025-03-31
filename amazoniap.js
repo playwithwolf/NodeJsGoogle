@@ -54,7 +54,7 @@ router.post('/amazoniapverify',  async (req, res) => {
     console.log(req.body.receiptId);
     const receiptId = req.body.receiptId;
     console.log(req.body.produceId);
-    const productId = req.body.produceId;
+    const produceId = req.body.produceId;
     
    // const url = `https://api.amazon.com/auth/o2/tokeninfo?access_token=${req.body.t3token}`;
    const urlheadersandbox = 'https://appstore-sdk.amazon.com/sandbox'

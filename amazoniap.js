@@ -74,7 +74,13 @@ router.post('/amazoniapverify',  async (req, res) => {
           console.log("--------- 这是测试购买----------");
         } 
 
-        if(response.data.productId == productId && response.data.receiptId==receiptId && response.data.cancelReason==null){
+        console.log("---------------response.data.cancelReason------------" + response.data.cancelReason);
+        console.log("---------------response.data.productId------------" + response.data.productId);
+        console.log("---------------productId------------" + productId);
+        console.log("---------------response.data.receiptId------------" + response.data.receiptId);
+        console.log("---------------receiptId------------" + receiptId);
+
+        if(response.data.productId == productId && response.data.receiptId == receiptId && response.data.cancelReason==null){
           console.log("--------- 购买成功 ----------");
         }
          

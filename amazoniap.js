@@ -19,14 +19,42 @@ function deepClone(obj, hash = new WeakMap()) {
   
     return result;
   }
+
+  //响应字段 https://developer.amazon.com/zh/docs/in-app-purchasing/iap-rvs-for-android-apps.html#rvs-response-fields-for-successful-transactions
+  // {
+  //   autoRenewing: false,
+  //   baseReceipts: null,
+  //   betaProduct: false,
+  //   cancelDate: null,
+  //   cancelReason: null,
+  //   deferredDate: null,
+  //   deferredSku: null,
+  //   freeTrialEndDate: null,
+  //   gracePeriodEndDate: null,
+  //   parentProductId: null,
+  //   productId: 'Amazon_100',
+  //   productType: 'CONSUMABLE',
+  //   promotions: null,
+  //   purchaseDate: 1743411656809,
+  //   purchaseMetadataMap: null,
+  //   quantity: 1,
+  //   receiptId: 'q1YqVbJSyjH28DGPKChw9c0o8nd3ySststQtzSkrzM8tCk43K6z0d_HOTcwwN8vxCrVV0lEqBmpxzE2sys-LNzQwAAqUKFkZ6CilAIUNzU2MTQwNzUzNLAwsgTKJSlZpiTnFqTpK6XBWGpRVCwA',
+  //   renewalDate: null,
+  //   term: null,
+  //   termSku: null,
+  //   testTransaction: true
+  // }
 router.post('/amazoniapverify',  async (req, res) => {
     console.log(req.body);
-    console.log(req.body.developerSecret);
-    const SharedSecret = "2:NT9308kde0b6k122EXE59uxsi7mmp1cm57exF1hZK9S-pFPKIHfWgT-EBYfVRWa1jVGxfHjlPxRhM7VIaheq3w==:TfOfSBqkwDOJbX9_fhHrFQ==";
+    console.log(req.body.sharedSecret);
+    //https://developer.amazon.com/sdk/shared-key.html  sharedSecret 生成办法
+    const SharedSecret = req.body.sharedSecret ;
     console.log(req.body.userId);
     const userId = req.body.userId;
     console.log(req.body.receiptId);
     const receiptId = req.body.receiptId;
+    console.log(req.body.productId);
+    const productId = req.body.productId;
     
    // const url = `https://api.amazon.com/auth/o2/tokeninfo?access_token=${req.body.t3token}`;
    const urlheadersandbox = 'https://appstore-sdk.amazon.com/sandbox'
@@ -39,32 +67,16 @@ router.post('/amazoniapverify',  async (req, res) => {
         //console.log(response);
         console.log("---------------1------------");
         console.log(response.data);
+        
         console.log("---------------2------------");
-        // console.log("app_id:"+response.data.app_id);
-        // console.log("req.body.amazonappid:"+ req.body.amazonappid);
-        // console.log("req.body.t3userid:"+ req.body.t3userid);
-        // console.log("response.data.user_id:"+ response.data.user_id);
-        // if(response.data.app_id == req.body.amazonappid && req.body.t3userid == response.data.user_id ){
-        //     console.log("---------------ok------------");
-        //     try{
+       
+        if(response.data.testTransaction){
+          console.log("--------- 这是测试购买----------");
+        } 
 
-        //         const headers = {
-        //             'Authorization': `bearer ${req.body.t3token}`
-        //           };
-              
-        //           // 使用 Axios 发送 GET 请求
-        //           const response = await axios.get('https://api.amazon.com/user/profile', { headers });
-        //            console.log("response = "+response.data);
-        //          // const dataMap = deepClone(response.data);
-
-        //          console.log("email = "+response.data.email);
-        //           // 返回响应数据
-        //           //res.json(response);
-
-        //     }catch(error){
-        //         console.error('profile Error:', error);
-        //     }
-        // }
+        if(response.data.productId == productId && response.data.receiptId==receiptId && response.data.cancelReason==null){
+          console.log("--------- 购买成功 ----------");
+        }
          
     } catch (error) {
         console.error('Error fetching token info:', error);

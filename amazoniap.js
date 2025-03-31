@@ -3,23 +3,6 @@ const axios = require('axios');
 const https = require('https');
 const router = express.Router();
  
-function deepClone(obj, hash = new WeakMap()) {
-    if (typeof obj !== 'object' || obj === null) return obj;
-  
-    if (hash.has(obj)) return hash.get(obj);
-  
-    const result = Array.isArray(obj) ? [] : {};
-    hash.set(obj, result);
-  
-    for (const key in obj) {
-      if (obj.hasOwnProperty(key)) {
-        result[key] = deepClone(obj[key], hash);
-      }
-    }
-  
-    return result;
-  }
-
   //响应字段 https://developer.amazon.com/zh/docs/in-app-purchasing/iap-rvs-for-android-apps.html#rvs-response-fields-for-successful-transactions
   // {
   //   autoRenewing: false,
@@ -53,8 +36,8 @@ router.post('/amazoniapverify',  async (req, res) => {
     const userId = req.body.userId;
     console.log(req.body.receiptId);
     const receiptId = req.body.receiptId;
-    console.log(req.body.produceId);
-    const produceId = req.body.produceId;
+    console.log(req.body.productId);
+    const productId = req.body.productId;
     
    // const url = `https://api.amazon.com/auth/o2/tokeninfo?access_token=${req.body.t3token}`;
    const urlheadersandbox = 'https://appstore-sdk.amazon.com/sandbox'
@@ -75,12 +58,12 @@ router.post('/amazoniapverify',  async (req, res) => {
         } 
 
         console.log("---------------response.data.cancelReason------------" + response.data.cancelReason);
-        console.log("---------------response.data.productId------------" + response.data.produceId);
-        console.log("---------------productId------------" + produceId);
+        console.log("---------------response.data.produceId------------" + response.data.productId);
+        console.log("---------------produceId------------" + productId);
         console.log("---------------response.data.receiptId------------" + response.data.receiptId);
         console.log("---------------receiptId------------" + receiptId);
 
-        if(response.data.produceId == produceId && response.data.receiptId == receiptId && response.data.cancelReason==null){
+        if(response.data.productId == productId && response.data.receiptId == receiptId && response.data.cancelReason==null){
           console.log("--------- 购买成功 ----------");
         }
          

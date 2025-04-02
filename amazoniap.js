@@ -2,7 +2,7 @@ const express = require('express');
 const axios = require('axios');
 const https = require('https');
 const router = express.Router();
- 
+  //https://developer.amazon.com/zh/docs/in-app-purchasing/iap-rvs-setup-prod.html 文档
   //响应字段 https://developer.amazon.com/zh/docs/in-app-purchasing/iap-rvs-for-android-apps.html#rvs-response-fields-for-successful-transactions
   // {
   //   autoRenewing: false,

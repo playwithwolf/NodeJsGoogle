@@ -47,7 +47,7 @@ router.post('/amazonAuth',  async (req, res) => {
               
                   // 使用 Axios 发送 GET 请求
                   const response = await axios.get('https://api.amazon.com/user/profile', { headers });
-                   console.log("response = "+response.data);
+                  console.log("response = "+ JSON.stringify(response.data));
                  // const dataMap = deepClone(response.data);
 
                  console.log("email = "+response.data.email);

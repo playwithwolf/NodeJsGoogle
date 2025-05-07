@@ -28,6 +28,7 @@ function validateTelegramData(initDataStr, botToken) {
         .map(([key, value]) => `${key}=${value}`)
         .join('\n') + '\n' + parsedUser;  // 将原始的 user 字符串加入计算
 
+    console.log("dataCheckString:",dataCheckString)    
     // 计算得到的哈希值
     const computedHash = crypto
         .createHmac('sha256', secretKey)

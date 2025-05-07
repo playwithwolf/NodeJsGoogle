@@ -2,27 +2,38 @@ const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
 const querystring = require('querystring');
+const url = require('url');
 const router = express.Router();
 
 
 // Telegram验证函数
 function validateTelegramData(initDataStr, botToken) {
+    // 获取 secret key：通过 bot token 计算 SHA256
     const secretKey = crypto.createHash('sha256').update(botToken).digest();
 
+    // 解析 initData
     const params = new URLSearchParams(initDataStr);
-    const hash = params.get('hash');
+    const hash = params.get('hash');  // 提取签名（hash）
+
+    // 删除 hash 参数，因为它不参与计算
     params.delete('hash');
 
+    // 按照字典顺序对参数进行排序
     const sortedParams = [...params.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
-        .join('\n');
+        .join('\n');  // 拼接成 `key=value` 格式
 
+    // 计算签名
     const computedHash = crypto
         .createHmac('sha256', secretKey)
         .update(sortedParams)
         .digest('hex');
 
+    console.log('Computed hash:', computedHash);
+    console.log('Provided hash:', hash);
+
+    // 返回计算出的签名是否与传入的 hash 相等
     return computedHash === hash;
 }
 

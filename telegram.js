@@ -17,13 +17,16 @@ function validateTelegramData(initDataStr, botToken) {
 
     // 确保 user 字段的原始字符串不被改变，其他参数继续处理
     const userStr = params.get('user');  // 获取 user 字段值
+    const parsedUser = JSON.parse(userStr);
+    console.log("parsedUser:",parsedUser)
     params.delete('user');  // 删除 user，防止重复添加
+
 
     // 计算dataCheckString，不包括 user，保持其原始状态
     const dataCheckString = [...params.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
-        .join('\n') + '\n' + userStr;  // 将原始的 user 字符串加入计算
+        .join('\n') + '\n' + parsedUser;  // 将原始的 user 字符串加入计算
 
     // 计算得到的哈希值
     const computedHash = crypto

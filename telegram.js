@@ -8,28 +8,24 @@ const router = express.Router();
 
 // Telegram验证函数
 function validateTelegramData(initDataStr, botToken) {
-    // 获取 secret key：通过 bot token 计算 SHA256
     const secretKey = crypto.createHash('sha256').update(botToken).digest();
 
-    // 解析 initData
     const params = new URLSearchParams(initDataStr);
-    const hash = params.get('hash');  // 提取签名（hash）
-
-    // 删除 hash 参数，因为它不参与计算
+    const hash = params.get('hash');
     params.delete('hash');
 
-    // 按照字典顺序对参数进行排序
-    const sortedParams = [...params.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
+    // Telegram 要求保留原始顺序和内容，尤其是 user 对象是 JSON 字符串，不要二次编码
+    const dataCheckString = [...params.entries()]
+        .sort(([a], [b]) => a.localeCompare(b))  // 字典序排序
         .map(([key, value]) => `${key}=${value}`)
-        .join('\n');  // 拼接成 `key=value` 格式
+        .join('\n');
 
-    // 计算签名
     const computedHash = crypto
         .createHmac('sha256', secretKey)
-        .update(sortedParams)
+        .update(dataCheckString)
         .digest('hex');
 
+        
     console.log('Computed hash:', computedHash);
     console.log('Provided hash:', hash);
 

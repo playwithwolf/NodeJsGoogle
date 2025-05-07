@@ -13,6 +13,8 @@ function validateTelegramData(initDataStr, botToken) {
     // 解码前端传来的 initData（关键步骤）
     const decodedStr = decodeURIComponent(initDataStr);
 
+    console.log('decodedStr:', decodedStr);
+
     const params = new URLSearchParams(decodedStr);
     const hash = params.get('hash');
     params.delete('hash');

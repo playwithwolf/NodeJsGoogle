@@ -10,6 +10,8 @@ const router = express.Router();
 function validateTelegramData(initDataStr, botToken) {
     const secretKey = crypto.createHash('sha256').update(botToken).digest();
 
+    console.log('initDataStr:', initDataStr);
+
     // 解码前端传来的 initData（关键步骤）
     const decodedStr = decodeURIComponent(initDataStr);
 
@@ -58,17 +60,19 @@ router.post('/telegramVerify', async (req, res) => {
     }
 
      // 解析 t3token，提取 user 信息
-     const data = querystring.parse(t3token);
-     const userJson = data.user ? JSON.parse(data.user) : null;
- 
-     if (!userJson || !userJson.id) {
-         return res.status(400).json({ error: 'User data not found in initData' });
-     }
+    const searchParams = new URLSearchParams(t3token);
+    const userStr = searchParams.get('user');
+    const userJson = userStr ? JSON.parse(userStr) : null;
 
-     // 比对前端传过来的 user id
-    if (user.id.toString() !== t3userid.toString()) {
+    if (!userJson || !userJson.id) {
+        return res.status(400).json({ error: 'User data not found in initData' });
+    }
+
+    // 比对前端传过来的 user id
+    if (userJson.id.toString() !== t3userid.toString()) {
         return res.status(403).json({ error: 'User ID mismatch' });
     }
+
 
     // 验证成功
     return res.status(200).json({

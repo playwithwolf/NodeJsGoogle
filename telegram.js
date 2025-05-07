@@ -22,11 +22,12 @@ function validateTelegramData(initDataStr, botToken) {
     params.delete('user');  // 删除 user，防止重复添加
 
 
-    // 计算dataCheckString，不包括 user，保持其原始状态
-    const dataCheckString = [...params.entries()]
+     // 构建符合 Telegram 签名规范的 data_check_string
+     const dataCheckString = [...params.entries()]
         .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
-        .join('\n') + '\n' + parsedUser;  // 将原始的 user 字符串加入计算
+        .concat(`user=${parsedUser}`) // 最后加上 user 字段原始串
+        .join('\n');
 
     console.log("dataCheckString:",dataCheckString)    
     // 计算得到的哈希值

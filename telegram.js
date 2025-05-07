@@ -10,13 +10,15 @@ const router = express.Router();
 function validateTelegramData(initDataStr, botToken) {
     const secretKey = crypto.createHash('sha256').update(botToken).digest();
 
-    const params = new URLSearchParams(initDataStr);
+    // 解码前端传来的 initData（关键步骤）
+    const decodedStr = decodeURIComponent(initDataStr);
+
+    const params = new URLSearchParams(decodedStr);
     const hash = params.get('hash');
     params.delete('hash');
 
-    // Telegram 要求保留原始顺序和内容，尤其是 user 对象是 JSON 字符串，不要二次编码
     const dataCheckString = [...params.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))  // 字典序排序
+        .sort(([a], [b]) => a.localeCompare(b))
         .map(([key, value]) => `${key}=${value}`)
         .join('\n');
 
@@ -25,9 +27,9 @@ function validateTelegramData(initDataStr, botToken) {
         .update(dataCheckString)
         .digest('hex');
 
-        
     console.log('Computed hash:', computedHash);
     console.log('Provided hash:', hash);
+
 
     // 返回计算出的签名是否与传入的 hash 相等
     return computedHash === hash;

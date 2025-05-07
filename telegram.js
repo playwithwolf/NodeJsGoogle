@@ -8,6 +8,8 @@ function validateTelegramData(initDataStr, botToken) {
     const secretKey = crypto.createHash('sha256').update(botToken).digest();
 
     // 解码前端传来的 initData，但保留 user 字段不解码（不要对 user 字段解码）
+    const params0= new URLSearchParams(initDataStr);
+
     const decodedStr = decodeURIComponent(initDataStr);
     console.log('Decoded initData:', decodedStr);
 
@@ -17,19 +19,22 @@ function validateTelegramData(initDataStr, botToken) {
 
     // 确保 user 字段的原始字符串不被改变，其他参数继续处理
     const userStr = params.get('user');  // 获取 user 字段值
+    const userStr2 = params0.get('user');
     const parsedUser = JSON.parse(userStr);
     console.log("parsedUser:",parsedUser)
     params.delete('user');  // 删除 user，防止重复添加
 
 
      // 构建符合 Telegram 签名规范的 data_check_string
-     const dataCheckString = [...params.entries()]
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([key, value]) => `${key}=${value}`)
-        .concat(`user=${parsedUser}`) // 最后加上 user 字段原始串
-        .join('\n');
+     const entries = [...params.entries()];
+     entries.push(['user', parsedUser]);
+     
+     const dataCheckString = entries
+         .sort(([a], [b]) => a.localeCompare(b))
+         .map(([key, value]) => `${key}=${value}`)
+         .join('\n');
 
-    console.log("dataCheckString:",dataCheckString)    
+ 
     // 计算得到的哈希值
     const computedHash = crypto
         .createHmac('sha256', secretKey)
@@ -37,6 +42,45 @@ function validateTelegramData(initDataStr, botToken) {
         .digest('hex');
 
     console.log('Computed hash:', computedHash);
+
+
+    // 构建符合 Telegram 签名规范的 data_check_string
+    const entries2 = [...params.entries()];
+    entries2.push(['user', userStr2]);
+    
+    const dataCheckString2 = entries2
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, value]) => `${key}=${value}`)
+        .join('\n');
+
+
+   // 计算得到的哈希值
+   const computedHash2 = crypto
+       .createHmac('sha256', secretKey)
+       .update(dataCheckString2)
+       .digest('hex');
+
+       console.log('Computed hash 2 :', computedHash2);    
+
+
+   // 构建符合 Telegram 签名规范的 data_check_string
+   const entries3 = [...params.entries()];
+   entries3.push(['user', userStr]);
+   
+   const dataCheckString3 = entries3
+       .sort(([a], [b]) => a.localeCompare(b))
+       .map(([key, value]) => `${key}=${value}`)
+       .join('\n');
+
+
+  // 计算得到的哈希值
+  const computedHash3 = crypto
+      .createHmac('sha256', secretKey)
+      .update(dataCheckString3)
+      .digest('hex');
+
+      console.log('Computed hash 3 :', computedHash3);        
+
     console.log('Provided hash:', hash);
 
     // 返回计算出的签名是否与传入的 hash 相等

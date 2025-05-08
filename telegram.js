@@ -44,7 +44,7 @@ router.post('/telegramVerify', async (req, res) => {
     const secret = '7583464834:AAFfuAopbKS_BQw__irtDfcrwax-byZk24I';
 
     // 验证 initData 的签名
-    const isValid = validateTelegramData(t3token, secret);
+    const isValid = verifyTelegramWebApp(t3token, secret);
     if (!isValid) {
         return res.status(400).json({ error: 'Invalid initData signature' });
     }

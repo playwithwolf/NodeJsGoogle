@@ -2,6 +2,7 @@ const express = require('express');
 const crypto = require('crypto');
 const url = require('url');
 const router = express.Router();
+const querystring = require('querystring');
 
 // Telegram验证函数
 function verifyTelegramWebApp(initDataStr, botToken) {

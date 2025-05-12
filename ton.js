@@ -49,4 +49,35 @@ try {
 
 });
 
+router.post('/getBalance', async (req, res) => {
+
+try {
+    const { address } = req.body;
+
+    if (!address) {
+      return res.status(400).json({ error: '地址不能为空' });
+    }
+
+    // 创建 Address 实例
+    const tonAddress = new TonWeb.utils.Address(address);
+
+    // 获取余额（单位为 nanoTON）
+    const balanceNano = await tonweb.getBalance(tonAddress);
+
+    // 将 nanoTON 转换为 TON
+    const balanceTON = TonWeb.utils.fromNano(balanceNano);
+
+    res.status(200).json({
+      address: tonAddress.toString(true, true, true),
+      balanceTON,
+      balanceNano: balanceNano.toString(),
+    });
+  } catch (error) {
+    console.error('查询余额失败:', error);
+    res.status(500).json({ error: '查询余额失败' });
+  }
+
+});
+
+
 module.exports = router;

@@ -4,6 +4,7 @@ const url = require('url');
 const router = express.Router();
 const querystring = require('querystring');
 const tonMnemonic = require('tonweb-mnemonic');
+const TonWeb = require('tonweb');
 
 const tonweb = new TonWeb(new TonWeb.HttpProvider('https://testnet.toncenter.com/api/v2/jsonRPC'));
 router.post('/createWallet', async (req, res) => {

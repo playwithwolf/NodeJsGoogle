@@ -35,9 +35,9 @@ try {
     // 返回钱包信息
     res.status(200).json({
       mnemonics,
-      address: tonweb.utils.addressToFriendly(address),
-      bounceableAddress: address.toString(true, true, false),
-      nonBounceableAddress: address.toString(false, true, false),
+      bounceableAddress: address.toString(true, true, true),
+      nonBounceableAddress: address.toString(true, true, false),
+      rawAddress: address.toString(false, false, false),
       publicKey: Buffer.from(keyPair.publicKey).toString('hex'),
       secretKey: Buffer.from(keyPair.secretKey).toString('hex'),
       walletVersion: 'v3R2'

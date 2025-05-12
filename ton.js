@@ -32,6 +32,9 @@ try {
     // 获取钱包地址
     const address = await wallet.getAddress();
 
+    // 部署钱包合约
+    await wallet.deploy(keyPair.secretKey).send();
+
     // 返回钱包信息
     res.status(200).json({
       mnemonics,

@@ -35,7 +35,7 @@ try {
     // 返回钱包信息
     res.status(200).json({
       mnemonics,
-      address: address.toFriendly(),
+      address: tonweb.utils.addressToFriendly(address),
       bounceableAddress: address.toString(true, true, false),
       nonBounceableAddress: address.toString(false, true, false),
       publicKey: Buffer.from(keyPair.publicKey).toString('hex'),

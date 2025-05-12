@@ -3,6 +3,10 @@ const crypto = require('crypto');
 const url = require('url');
 const router = express.Router();
 const querystring = require('querystring');
+const { mnemonicNew, mnemonicToKeyPair } = require('@ton/crypto');
+
+const app = express();
+const port = 3000;
 
 // Telegram验证函数
 function verifyTelegramWebApp(initDataStr, botToken) {

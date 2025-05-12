@@ -1,11 +1,14 @@
 {
   "dependencies": {
-    "axios": "^1.7.9",
+    "@ton/crypto": "^3.3.0",
+    "axios": "^1.9.0",
     "body-parser": "^1.20.3",
     "cors": "^2.8.5",
-    "express": "^4.21.1",
+    "express": "^4.21.2",
     "google-auth-library": "^9.15.0",
     "passport": "^0.7.0",
-    "passport-google-oauth20": "^2.0.0"
+    "passport-google-oauth20": "^2.0.0",
+    "tonweb": "^0.0.66",
+    "tonweb-mnemonic": "^1.0.1"
   }
 }

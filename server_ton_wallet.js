@@ -3,9 +3,9 @@ require('dotenv').config();
 const TonWeb = require('tonweb');
 const tonMnemonic = require('tonweb-mnemonic');
 
-const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API),{
+const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
-});
+}));
 const tonweb = new TonWeb(provider);
 const WalletClass = tonweb.wallet.all.v3R2;
 

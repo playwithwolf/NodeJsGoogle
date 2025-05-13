@@ -119,6 +119,20 @@ async function deploy() {
   }
 }
 
+
+async function checkBalanceDebug() {
+  await init();
+  const address = await wallet.getAddress();
+
+  console.log('[地址格式]');
+  console.log('raw:', address.toString(false, false, false));
+  console.log('non-bounceable:', address.toString(true, true, false));
+  console.log('bounceable:', address.toString(true, true, true));
+
+  const info = await tonweb.provider.getAddressInfo(address.toString(false, false, false));
+  console.log('[balance]', info.balance);
+}
+
 module.exports = {
   init,
   getAddress,
@@ -126,4 +140,5 @@ module.exports = {
   sendTon,
   isDeployed,
   deploy,
+  checkBalanceDebug,
 };

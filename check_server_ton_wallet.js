@@ -8,7 +8,7 @@ const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug} = require
   const deployed = await isDeployed();
   if (!deployed) {
     console.log('[server_wallet] 钱包未部署，开始部署...');
-   // await deploy();
+    await deploy();
   } else {
     console.log('[server_wallet] 钱包已部署');
   }

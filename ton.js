@@ -43,7 +43,7 @@ router.post('/createTonWallet', async (req, res) => {
     await delay(1000);
     // 5. 向地址转入启动资金（0.05 TON）
     await sendTon(address, 0.1);
-    console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);
+    console.log('[系统] 已向用户地址转入 0.1 TON:', addressStr);
 
     await delay(1000);
     // 6. 轮询到账
@@ -164,6 +164,44 @@ try {
   } catch (error) {
     console.error('查询余额失败:', error);
     res.status(500).json({ error: '查询余额失败' });
+  }
+
+});
+
+
+router.post('/serverSendTon', async (req, res) => {
+
+try {
+    const { address , orderId , mnemonics , amountTON } = req.body;
+
+    if (!address) {
+      return res.status(400).json({ error: '地址不能为空' });
+    }
+
+    if (!orderId) {
+      return res.status(400).json({ error: 'orderId不能为空' });
+    }
+
+    if (!mnemonics) {
+      return res.status(400).json({ error: 'mnemonics不能为空' });
+    }
+
+    if (!amountTON) {
+      return res.status(400).json({ error: 'amountTON不能为空' });
+    }
+ 
+    const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    const wallet = new WalletClass(tonweb.provider, {
+      publicKey: keyPair.publicKey,
+      wc: 0,
+    });
+
+     const address = await wallet.getAddress();
+     const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
+     console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
+    
+  } catch (error) {
+     
   }
 
 });

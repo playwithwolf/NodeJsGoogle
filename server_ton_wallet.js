@@ -2,6 +2,7 @@
 require('dotenv').config();
 const TonWeb = require('tonweb');
 const tonMnemonic = require('tonweb-mnemonic');
+const { v4: uuidv4 } = require('uuid');
 
 const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
@@ -121,40 +122,80 @@ async function sendTon(toAddress, amountTON) {
       await new Promise(r => setTimeout(r, delayTime));
     }
 
-    // ========== 等待交易确认 ==========
-    // for (let i = 0; i < 10; i++) {
-    //   const newSeqno = await wallet.methods.seqno().call();
-    //   console.log(`[server_wallet] 第 ${i + 1} 次检查 seqno:`, newSeqno);
-    //   if (newSeqno > seqno) {
-    //     console.log('[server_wallet] 转账已确认 on-chain');
-
-    //     // 查询最近交易作为交易记录
-    //     const transactions = await tonweb.provider.getTransactions(walletAddress, 1);
-    //     const tx = transactions[0];
-    //     const txHash = tx.transaction_id.hash;
-    //     const txLt = tx.transaction_id.lt;
-
-    //     return {
-    //       status: 'success',
-    //       hash: txHash,
-    //       lt: txLt,
-    //       to: toAddressStr,
-    //       amount: amountTON,
-    //       raw: tx,
-    //     };
-    //   }
-
-    //   await new Promise(r => setTimeout(r, 5000));
-    // }
-
-    // throw new Error('服务器钱包转账交易未确认');
-
+     
   } catch (err) {
     console.error('[server_wallet] 转账失败:', err);
     throw new Error('服务器钱包转账失败: ' + err.message);
   }
 }
 
+
+async function sendTonHaveOrderId(toAddress, amountTON, orderId) {
+  await init();
+  try {
+    const deployed = await isDeployed();
+    if (!deployed) {
+      throw new Error('服务器钱包尚未部署，无法发送交易');
+    }
+
+    const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, true, false);
+    const seqno = await waitForSeqno();
+    const amountNano = TonWeb.utils.toNano(amountTON.toString());
+
+    console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}，当前 seqno=${seqno}`);
+
+ 
+
+    const payloadbyte = TonWeb.utils.stringToBytes(orderId);
+
+    const sendTransaction = async () => {
+      return wallet.methods.transfer({
+        secretKey: keyPair.secretKey,
+        toAddress: toAddressStr,
+        amount: amountNano,
+        seqno,
+        payload: payloadbyte,
+        sendMode: 3,
+      }).send();  // 注意：这只返回 `@type: "ok"`
+    };
+
+    let retries = 0;
+    const maxRetries = 5;
+    const delayTime = 5000;
+    let result;
+
+    // ========== 发送交易重试 ==========
+    while (retries < maxRetries) {
+      try {
+        result = await sendTransaction();
+        console.log('[server_wallet] 转账请求:', JSON.stringify(result));
+
+        if (result && result['@type'] === 'ok') {
+          console.log('[server_wallet] 转账请求发送成功:', JSON.stringify(result));
+          break;  // 表示 send() 成功调用
+        }
+      } catch (err) {
+        if (err.message.includes('Ratelimit exceed')) {
+          console.warn('[server_wallet] 遇到速率限制，等待重试...');
+        } else {
+          console.error('[server_wallet] 转账失败:', err.message);
+          throw new Error('[server_wallet] 转账失败: ' + err.message);
+        }
+      }
+
+      retries++;
+      if (retries >= maxRetries) {
+        throw new Error('[server_wallet] 达到最大重试次数，仍然无法发送交易');
+      }
+      await new Promise(r => setTimeout(r, delayTime));
+    }
+
+     
+  } catch (err) {
+    console.error('[server_wallet] 转账失败:', err);
+    throw new Error('服务器钱包转账失败: ' + err.message);
+  }
+}
 
 
 // 部署钱包

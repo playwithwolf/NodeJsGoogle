@@ -1,4 +1,4 @@
-const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug} = require('./server_ton_wallet');
+const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug , getStatus} = require('./server_ton_wallet');
 
 (async () => {
   const balance = await getBalance();
@@ -12,5 +12,7 @@ const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug} = require
   } else {
     console.log('[server_wallet] 钱包已部署');
   }
+
+  await getStatus();
   // await deploy();
 })();

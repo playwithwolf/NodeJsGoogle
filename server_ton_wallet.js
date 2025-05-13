@@ -36,6 +36,15 @@ async function getBalance() {
   return info.balance; // string，单位为 nanoTON
 }
 
+
+async function getStatus() {
+  await init();
+  const address = await wallet.getAddress();
+  const info = await tonweb.provider.getAddressInfo(address.toString());
+  console.log('状态:', info.state);
+  console.log('余额:', info.balance);
+}
+
 // 判断钱包是否已部署
 async function isDeployed() {
  await init();
@@ -66,15 +75,17 @@ async function sendTon(toAddress, amountTON) {
       throw new Error('服务器钱包尚未部署，无法发送交易');
     }
 
+    const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, false, false);
+
     const seqno = await waitForSeqno();
 
     const amountNano = TonWeb.utils.toNano(amountTON.toString());
 
-    console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddress}，当前 seqno=${seqno}`);
+    console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}，当前 seqno=${seqno}`);
 
     const result = await wallet.methods.transfer({
       secretKey: keyPair.secretKey,
-      toAddress,
+      toAddress: toAddressStr,
       amount: amountNano,
       seqno,
       payload: null,
@@ -150,4 +161,5 @@ module.exports = {
   isDeployed,
   deploy,
   checkBalanceDebug,
+  getStatus,
 };

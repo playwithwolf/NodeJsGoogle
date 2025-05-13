@@ -37,7 +37,7 @@ router.post('/createTonWallet', async (req, res) => {
 
 
     // 5. 向地址转入启动资金（0.05 TON）
-    await sendTon(addressStr, 0.05);
+    await sendTon(address, 0.1);
     console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);
 
     // 6. 轮询到账

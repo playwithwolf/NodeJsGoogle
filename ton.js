@@ -10,7 +10,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
   }));
 
-const { sendTon } =  require('./server_ton_wallet');
+const { sendTon , sendTonHaveOrderId } =  require('./server_ton_wallet');
 const WalletClass = tonweb.wallet.all.v3R2;
 
 

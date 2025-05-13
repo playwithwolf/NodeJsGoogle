@@ -185,14 +185,16 @@ try {
     if (!amountTON) {
       return res.status(400).json({ error: 'amountTON不能为空' });
     }
- 
+    console.log(`1`);
     const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    console.log(`2`);
     const wallet = new WalletClass(tonweb.provider, {
       publicKey: keyPair.publicKey,
       wc: 0,
     });
-
+    console.log(`3`);
      const address = await wallet.getAddress();
+     console.log(`4`);
      const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
      console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
      res.status(200).json({
@@ -200,10 +202,8 @@ try {
        
     });
   } catch (error) {
-      res.status(500).json({
-      error: error
-       
-    });
+     console.error('[serverSendTon] 发生错误:', error);
+     res.status(500).json({ error: error.message || String(error) });
   }
 
 });

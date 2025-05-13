@@ -195,9 +195,15 @@ try {
      const address = await wallet.getAddress();
      const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
      console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
-    
+     res.status(200).json({
+      sucess: true
+       
+    });
   } catch (error) {
-     
+      res.status(500).json({
+      error: error
+       
+    });
   }
 
 });

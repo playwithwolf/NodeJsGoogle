@@ -32,7 +32,7 @@ router.post('/createTonWallet', async (req, res) => {
     });
 
     const address = await userWallet.getAddress();
-    const addressStr = address.toString(true, true, false);
+    const addressStr = address.toString(true, false, false);
     console.log('[系统] 用户钱包地址:', addressStr);
 
 

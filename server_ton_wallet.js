@@ -44,27 +44,6 @@ async function getBalance() {
  
 
 // 判断钱包是否已部署
-async function isDeployed() {
- await init();
-  const address = await wallet.getAddress();
-  const info = await tonweb.provider.getAddressInfo(address.toString());
-  return info.code !== null; // 有 code 表示合约已部署
-}
-
-// 等待有效 seqno
-async function waitForSeqno(maxTries = 10, delay = 3000) {
-  for (let i = 0; i < maxTries; i++) {
-    const seqno = await wallet.methods.seqno().call();
-    if (typeof seqno === 'number' && seqno >= 0) {
-      return seqno;
-    }
-    console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，当前为:`, seqno);
-    await new Promise(resolve => setTimeout(resolve, delay));
-  }
-  throw new Error('无法获取有效的 seqno');
-}
-
-// 向某地址发送 TON
 async function sendTon(toAddress, amountTON) {
   await init();
   try {
@@ -74,9 +53,7 @@ async function sendTon(toAddress, amountTON) {
     }
 
     const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, false, false);
-
     const seqno = await waitForSeqno();
-
     const amountNano = TonWeb.utils.toNano(amountTON.toString());
 
     console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}，当前 seqno=${seqno}`);
@@ -89,59 +66,74 @@ async function sendTon(toAddress, amountTON) {
         seqno,
         payload: null,
         sendMode: 3,
-      }).send();
+      }).send();  // 注意：这只返回 `@type: "ok"`
     };
 
     let retries = 0;
-    const maxRetries = 5;  // 设置最大重试次数
-    const delayTime = 5000;  // 每次重试间隔 5 秒
-
-    // 重试机制
+    const maxRetries = 5;
+    const delayTime = 5000;
     let result;
+
+    // ========== 发送交易重试 ==========
     while (retries < maxRetries) {
+      try {
         result = await sendTransaction();
+        console.log('[server_wallet] 转账请求:', JSON.stringify(result));
 
-        console.log('[server_wallet] 转账已发送');
-        console.log('[server_wallet] 转账结果:', JSON.stringify(result));
-        console.log('Transaction hash:', result.hash);
-        console.log('Transaction status:', result.status);
-        console.log('Transaction details:', JSON.stringify(result, null, 2));
-
-        if (result && result.hash !== undefined) {
-          break;  // 转账成功，跳出循环
+        if (result && result['@type'] === 'ok') {
+          console.log('[server_wallet] 转账请求发送成功:', JSON.stringify(result));
+          break;  // 表示 send() 成功调用
         }
-
-        // 如果 result 表示速率限制错误，则重试
-        if (result === 'Ratelimit exceed' || result?.error === 'Ratelimit exceed') {
-          console.log('[server_wallet] 遇到速率限制，等待重试...');
-          retries++;
-          if (retries >= maxRetries) {
-            throw new Error('[server_wallet] 达到最大重试次数，仍然遭遇 Ratelimit exceed 错误');
-          }
-          await new Promise(r => setTimeout(r, delayTime));
+      } catch (err) {
+        if (err.message.includes('Ratelimit exceed')) {
+          console.warn('[server_wallet] 遇到速率限制，等待重试...');
         } else {
-          // 如果是其他错误，立即终止
-          throw new Error(`[server_wallet] 转账失败: ${JSON.stringify(result)}`);
+          console.error('[server_wallet] 转账失败:', err.message);
+          throw new Error('[server_wallet] 转账失败: ' + err.message);
         }
-    }
-
-    // 等待 seqno + 1
-    for (let i = 0; i < 10; i++) {
-      const newSeqno = await wallet.methods.seqno().call();
-      console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，newSeqno 当前为:`, newSeqno);
-      if (newSeqno > seqno) {
-        console.log('[server_wallet] 转账已确认 on-chain');
-        return result;
       }
-      await new Promise(r => setTimeout(r, 5000));
+
+      retries++;
+      if (retries >= maxRetries) {
+        throw new Error('[server_wallet] 达到最大重试次数，仍然无法发送交易');
+      }
+      await new Promise(r => setTimeout(r, delayTime));
     }
 
-    throw new Error('服务器钱包转账交易未确认');
+    // // ========== 等待交易确认 ==========
+    // for (let i = 0; i < 10; i++) {
+    //   const newSeqno = await wallet.methods.seqno().call();
+    //   console.log(`[server_wallet] 第 ${i + 1} 次检查 seqno:`, newSeqno);
+    //   if (newSeqno > seqno) {
+    //     console.log('[server_wallet] 转账已确认 on-chain');
+
+    //     // 查询最近交易作为交易记录
+    //     const transactions = await tonweb.provider.getTransactions(walletAddress, 1);
+    //     const tx = transactions[0];
+    //     const txHash = tx.transaction_id.hash;
+    //     const txLt = tx.transaction_id.lt;
+
+    //     return {
+    //       status: 'success',
+    //       hash: txHash,
+    //       lt: txLt,
+    //       to: toAddressStr,
+    //       amount: amountTON,
+    //       raw: tx,
+    //     };
+    //   }
+
+    //   await new Promise(r => setTimeout(r, 5000));
+    // }
+
+    // throw new Error('服务器钱包转账交易未确认');
+
   } catch (err) {
     console.error('[server_wallet] 转账失败:', err);
     throw new Error('服务器钱包转账失败: ' + err.message);
   }
 }
+
 
 
 // 部署钱包

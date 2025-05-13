@@ -44,6 +44,27 @@ async function getBalance() {
  
 
 // 判断钱包是否已部署
+async function isDeployed() {
+ await init();
+  const address = await wallet.getAddress();
+  const info = await tonweb.provider.getAddressInfo(address.toString());
+  return info.code !== null; // 有 code 表示合约已部署
+}
+
+// 等待有效 seqno
+async function waitForSeqno(maxTries = 10, delay = 3000) {
+  for (let i = 0; i < maxTries; i++) {
+    const seqno = await wallet.methods.seqno().call();
+    if (typeof seqno === 'number' && seqno >= 0) {
+      return seqno;
+    }
+    console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，当前为:`, seqno);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  throw new Error('无法获取有效的 seqno');
+}
+
+// 向某地址发送 TON
 async function sendTon(toAddress, amountTON) {
   await init();
   try {
@@ -100,7 +121,7 @@ async function sendTon(toAddress, amountTON) {
       await new Promise(r => setTimeout(r, delayTime));
     }
 
-    // // ========== 等待交易确认 ==========
+    // ========== 等待交易确认 ==========
     // for (let i = 0; i < 10; i++) {
     //   const newSeqno = await wallet.methods.seqno().call();
     //   console.log(`[server_wallet] 第 ${i + 1} 次检查 seqno:`, newSeqno);

@@ -93,19 +93,21 @@ async function sendTon(toAddress, amountTON) {
 // 部署钱包
 async function deploy() {
   await init();
-
+  const address = await wallet.getAddress();
   try {
     const seqno = 0
     const amountNano = TonWeb.utils.toNano('0.05'); // 建议部署费用留足
 
     console.log('[server_wallet] 部署钱包中...');
 
-    const result = await wallet.methods.deploy({
+    await wallet.methods.transfer({
       secretKey: keyPair.secretKey,
-      sendMode: 3,
+      toAddress: address, // ✅ 发给自己
       amount: amountNano,
       seqno,
+      sendMode: 3,
     }).send();
+
 
     console.log('[server_wallet] 钱包部署成功');
     return result;

@@ -18,6 +18,7 @@ async function init() {
       wc: 0,
     });
   }
+  return wallet;
 }
 
 // 获取钱包地址
@@ -35,7 +36,20 @@ async function getBalance() {
   return info.balance; // string，单位为 nanoTON
 }
 
-async function waitForSeqno(wallet, maxTries = 10, delay = 3000) {
+// 判断钱包是否已部署
+async function isDeployed() {
+  await init();
+  try {
+    const seqno = await wallet.methods.seqno().call();
+    return typeof seqno === 'number' && seqno >= 0;
+  } catch (err) {
+    console.error('[server_wallet] 检查钱包是否部署失败:', err);
+    return false;
+  }
+}
+
+// 等待有效 seqno
+async function waitForSeqno(maxTries = 10, delay = 3000) {
   for (let i = 0; i < maxTries; i++) {
     const seqno = await wallet.methods.seqno().call();
     if (typeof seqno === 'number' && seqno >= 0) {
@@ -51,13 +65,12 @@ async function waitForSeqno(wallet, maxTries = 10, delay = 3000) {
 async function sendTon(toAddress, amountTON) {
   await init();
   try {
-    const isDeployed = await wallet.isDeployed();
-    if (!isDeployed) {
+    const deployed = await isDeployed();
+    if (!deployed) {
       throw new Error('服务器钱包尚未部署，无法发送交易');
-
     }
 
-    const seqno = await waitForSeqno(wallet);
+    const seqno = await waitForSeqno();
 
     const amountNano = TonWeb.utils.toNano(amountTON.toString());
 
@@ -81,38 +94,24 @@ async function sendTon(toAddress, amountTON) {
   }
 }
 
-// 判断钱包是否部署
-async function isDeployed() {
-  await init();
-  try {
-    const seqno = await wallet.methods.seqno().call();
-    return seqno >= 0; // 如果 seqno >= 0，说明钱包已部署
-  } catch (err) {
-    console.error('[server_wallet] 检查钱包是否部署失败:', err);
-    return false;
-  }
-}
-
 // 部署钱包
 async function deploy() {
   await init();
 
   try {
-    const seqno = await wallet.methods.seqno().call();
-    const amountNano = TonWeb.utils.toNano('0.05'); // 发送 0.05 TON 来部署钱包
+    const seqno = await waitForSeqno();
+    const amountNano = TonWeb.utils.toNano('0.05'); // 建议部署费用留足
 
-    console.log('[server_wallet] 部署钱包');
+    console.log('[server_wallet] 部署钱包中...');
 
-    // 创建部署交易
     const result = await wallet.methods.deploy({
       secretKey: keyPair.secretKey,
       sendMode: 3,
       amount: amountNano,
-      seqno: seqno,
+      seqno,
     }).send();
 
     console.log('[server_wallet] 钱包部署成功');
-
     return result;
   } catch (err) {
     console.error('[server_wallet] 部署钱包失败:', err);
@@ -121,6 +120,7 @@ async function deploy() {
 }
 
 module.exports = {
+  init,
   getAddress,
   getBalance,
   sendTon,

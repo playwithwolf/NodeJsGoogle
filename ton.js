@@ -14,44 +14,6 @@ const { sendTon } =  require('./server_ton_wallet');
 
 const check_server_ton_wallet = require('./check_server_ton_wallet');
 
-
-
-// async function sendTon(toAddress, amountTON) {
-//   await init();
-
-//   try {
-//     // 获取 seqno
-//     let seqno = await wallet.methods.seqno().call();
-    
-//     // 检查 seqno 是否为 null 或无效，如果无效则尝试重试获取
-//     if (seqno === null || seqno < 0) {
-//       console.log('[server_wallet] seqno 无效，正在尝试重新获取...');
-//       seqno = await wallet.methods.seqno().call();
-//       if (seqno === null || seqno < 0) {
-//         throw new Error('无法获取有效的 seqno，钱包状态未同步');
-//       }
-//     }
-
-//     const amountNano = TonWeb.utils.toNano(amountTON.toString());
-//     console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddress}，当前 seqno=${seqno}`);
-
-//     const result = await wallet.methods.transfer({
-//       secretKey: keyPair.secretKey,
-//       toAddress,
-//       amount: amountNano,
-//       seqno,
-//       payload: null,
-//       sendMode: 3,
-//     }).send();
-
-//     console.log('[server_wallet] 转账已发送');
-//     return result;
-//   } catch (err) {
-//     console.error('[server_wallet] 转账失败:', err);
-//     throw new Error('服务器钱包转账失败: ' + err.message);
-//   }
-// }
-
 router.post('/createTonWallet', async (req, res) => {
   try {
     // 1. 生成助记词 & 密钥对
@@ -76,10 +38,12 @@ router.post('/createTonWallet', async (req, res) => {
     // 2. 检查钱包是否已激活
     const walletState = await tonweb.provider.getAddressInfo(addressStr);
     console.log('[系统] 用户钱包地址状态:', walletState.state);
-    
 
-    // 2. 部署钱包（激活钱包）
-    // 3. 部署钱包
+    if (walletState.state !== 'uninitialized') {
+      return res.status(400).json({ error: '钱包状态不适合部署，请检查钱包状态' });
+    }
+
+    // 3. 部署钱包（激活钱包）
     let deployTx;
     try {
       deployTx = await userWallet.deploy(keyPair.secretKey);
@@ -103,9 +67,8 @@ router.post('/createTonWallet', async (req, res) => {
       console.error('[系统] 部署钱包失败:', error);
       return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
     }
-    
 
-    // 3. 等待钱包部署完成（钱包状态变为 active）
+    // 4. 等待钱包部署完成（钱包状态变为 active）
     let isDeployed = false;
     for (let i = 0; i < 5; i++) {
       const walletState = await tonweb.provider.getAddressInfo(addressStr);
@@ -122,11 +85,11 @@ router.post('/createTonWallet', async (req, res) => {
       return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
     }
 
-    // 2. 向地址转入启动资金（0.05 TON）
+    // 5. 向地址转入启动资金（0.05 TON）
     await sendTon(addressStr, 0.05);
     console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);
 
-    // 3. 轮询到账
+    // 6. 轮询到账
     let isFunded = false;
     for (let i = 0; i < 10; i++) {
       const info = await tonweb.provider.getAddressInfo(addressStr);
@@ -143,27 +106,7 @@ router.post('/createTonWallet', async (req, res) => {
       return res.status(500).json({ error: '转账未到账，钱包部署失败，请稍后重试' });
     }
 
-    // // 4. 钱包合约部署
-    // const deployTx = await userWallet.deploy(keyPair.secretKey);
-    // await deployTx.send();
-    // console.log('[系统] 钱包部署交易已发送');
-
-    // 5. 可选轮询钱包激活状态
-    // let isDeployed = false;
-    // for (let i = 0; i < 5; i++) {
-    //   const info = await tonweb.provider.getAddressInfo(addressStr);
-    //   if (info.state === 'active') {
-    //     isDeployed = true;
-    //     break;
-    //   }
-    //   await new Promise(r => setTimeout(r, 3000));
-    // }
-
-    // if (!isDeployed) {
-    //   return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
-    // }
-
-    // 6. 返回信息
+    // 返回钱包信息
     res.status(200).json({
       mnemonics,
       bounceableAddress: address.toString(true, true, true),
@@ -173,7 +116,6 @@ router.post('/createTonWallet', async (req, res) => {
       secretKey: Buffer.from(keyPair.secretKey).toString('hex'),
       walletVersion: 'v3R2',
     });
-
   } catch (error) {
     console.error('创建钱包失败:', error);
     res.status(500).json({ error: '创建钱包失败', details: error.message });

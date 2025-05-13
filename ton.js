@@ -11,7 +11,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
   }));
 
 const { sendTon } =  require('./server_ton_wallet');
-
+const WalletClass = tonweb.wallet.all.v3R2;
 
 
 const check_server_ton_wallet = require('./check_server_ton_wallet');

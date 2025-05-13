@@ -79,7 +79,7 @@ router.post('/createTonWallet', async (req, res) => {
 
     // 3. 轮询到账
     let isFunded = false;
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 10; i++) {
       const info = await tonweb.provider.getAddressInfo(addressStr);
       const balanceNano = BigInt(info.balance || 0n);
       console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano} nanoTON`);

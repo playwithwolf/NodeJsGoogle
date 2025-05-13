@@ -35,11 +35,29 @@ async function getBalance() {
   return info.balance; // string，单位为 nanoTON
 }
 
+async function waitForSeqno(wallet, maxTries = 10, delay = 3000) {
+  for (let i = 0; i < maxTries; i++) {
+    const seqno = await wallet.methods.seqno().call();
+    if (typeof seqno === 'number' && seqno >= 0) {
+      return seqno;
+    }
+    console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，当前为:`, seqno);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  throw new Error('无法获取有效的 seqno');
+}
+
 // 向某地址发送 TON
 async function sendTon(toAddress, amountTON) {
   await init();
   try {
-    const seqno = await wallet.methods.seqno().call();
+    const isDeployed = await wallet.isDeployed();
+    if (!isDeployed) {
+      throw new Error('服务器钱包尚未部署，无法发送交易');
+
+    }
+
+    const seqno = await waitForSeqno(wallet);
 
     const amountNano = TonWeb.utils.toNano(amountTON.toString());
 

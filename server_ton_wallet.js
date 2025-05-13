@@ -38,14 +38,10 @@ async function getBalance() {
 
 // 判断钱包是否已部署
 async function isDeployed() {
-  await init();
-  try {
-    const seqno = await wallet.methods.seqno().call();
-    return typeof seqno === 'number' && seqno >= 0;
-  } catch (err) {
-    console.error('[server_wallet] 检查钱包是否部署失败:', err);
-    return false;
-  }
+ await init();
+  const address = await wallet.getAddress();
+  const info = await tonweb.provider.getAddressInfo(address.toString());
+  return info.code !== null; // 有 code 表示合约已部署
 }
 
 // 等待有效 seqno

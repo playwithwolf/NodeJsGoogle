@@ -38,7 +38,6 @@ async function getBalance() {
 // 向某地址发送 TON
 async function sendTon(toAddress, amountTON) {
   await init();
-
   try {
     const seqno = await wallet.methods.seqno().call();
 
@@ -67,7 +66,6 @@ async function sendTon(toAddress, amountTON) {
 // 判断钱包是否部署
 async function isDeployed() {
   await init();
-
   try {
     const seqno = await wallet.methods.seqno().call();
     return seqno >= 0; // 如果 seqno >= 0，说明钱包已部署

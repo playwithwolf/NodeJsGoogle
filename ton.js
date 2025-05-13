@@ -10,9 +10,9 @@ require('dotenv').config();
 const serverWallet = require('./server_ton_wallet');
 
 const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TON_API));
+
 router.post('/createTonWallet', async (req, res) => {
   try {
-    // 生成助记词
     const mnemonics = await tonMnemonic.generateMnemonic();
     const isValid = await tonMnemonic.validateMnemonic(mnemonics);
     if (!isValid) {
@@ -30,30 +30,31 @@ router.post('/createTonWallet', async (req, res) => {
     const address = await userWallet.getAddress();
     const addressStr = address.toString(true, true, false);
 
-    // 第一步：转账 0.05 TON 激活地址
+    // 1. 转账 0.05 TON
     await serverWallet.sendTon(addressStr, 0.05);
-    console.log('已向用户地址转入 0.05 TON');
+    console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);
 
-    // 第二步：轮询确认地址激活（部署钱包需要激活状态）
-    let isReady = false;
+    // 2. 等待余额到账
+    let isFunded = false;
     for (let i = 0; i < 6; i++) {
-      const deployed = await userWallet.isDeployed();
-      if (deployed) {
-        isReady = true;
+      const info = await tonweb.provider.getAddressInfo(addressStr);
+      const balanceNano = BigInt(info.balance || 0n);
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano} nanoTON`);
+      if (balanceNano >= BigInt(TonWeb.utils.toNano('0.05'))) {
+        isFunded = true;
         break;
       }
-      console.log(`等待地址激活中（第 ${i + 1} 次）...`);
-      await new Promise(r => setTimeout(r, 5000)); // 5 秒等待
+      await new Promise(r => setTimeout(r, 5000)); // 等 5 秒
     }
 
-    if (!isReady) {
-      return res.status(500).json({ error: '地址未激活，部署失败，请稍后重试' });
+    if (!isFunded) {
+      return res.status(500).json({ error: '转账未到账，钱包部署失败，请稍后重试' });
     }
 
-    // 第三步：部署合约
+    // 3. 部署钱包合约
     await userWallet.deploy(keyPair.secretKey).send();
 
-    // 返回信息
+    // 4. 返回信息
     res.status(200).json({
       mnemonics,
       bounceableAddress: address.toString(true, true, true),
@@ -63,6 +64,7 @@ router.post('/createTonWallet', async (req, res) => {
       secretKey: Buffer.from(keyPair.secretKey).toString('hex'),
       walletVersion: 'v3R2'
     });
+
   } catch (error) {
     console.error('创建钱包失败:', error);
     res.status(500).json({ error: '创建钱包失败', details: error.message });

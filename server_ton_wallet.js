@@ -39,19 +39,31 @@ async function getBalance() {
 async function sendTon(toAddress, amountTON) {
   await init();
 
-  const seqno = await wallet.methods.seqno().call();
+  try {
+    const seqno = await wallet.methods.seqno().call();
 
-  const result = await wallet.methods.transfer({
-    secretKey: keyPair.secretKey,
-    toAddress,
-    amount: TonWeb.utils.toNano(amountTON.toString()),
-    seqno,
-    payload: null,
-    sendMode: 3,
-  }).send();
+    const amountNano = TonWeb.utils.toNano(amountTON.toString());
 
-  return result;
+    console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddress}，当前 seqno=${seqno}`);
+
+    const result = await wallet.methods.transfer({
+      secretKey: keyPair.secretKey,
+      toAddress,
+      amount: amountNano,
+      seqno,
+      payload: null,
+      sendMode: 3,
+    }).send();
+
+    console.log('[server_wallet] 转账已发送');
+
+    return result;
+  } catch (err) {
+    console.error('[server_wallet] 转账失败:', err);
+    throw new Error('服务器钱包转账失败: ' + err.message);
+  }
 }
+
 
 module.exports = {
   getAddress,

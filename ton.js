@@ -7,7 +7,7 @@ const tonMnemonic = require('tonweb-mnemonic');
 const TonWeb = require('tonweb');
 
 const tonweb = new TonWeb(new TonWeb.HttpProvider('https://testnet.toncenter.com/api/v2/jsonRPC'));
-router.post('/createWallet', async (req, res) => {
+router.post('/createTonWallet', async (req, res) => {
     console.log('Request body:', req.body);
 try {
     // 生成 24 个助记词
@@ -52,7 +52,7 @@ try {
 
 });
 
-router.post('/getBalance', async (req, res) => {
+router.post('/getTonBalance', async (req, res) => {
 
 try {
     const { address } = req.body;
@@ -81,6 +81,74 @@ try {
   }
 
 });
+
+
+// router.post('/prepare-transfer', async (req, res) => {
+//   try {
+//     const { fromPublicKey, toAddress, amount } = req.body;
+
+//     if (!fromPublicKey || !toAddress || !amount) {
+//       return res.status(400).json({ error: '缺少必要的参数' });
+//     }
+
+//     // 创建钱包实例
+//     const WalletClass = tonweb.wallet.all.v3R2;
+//     const wallet = new WalletClass(tonweb.provider, {
+//       publicKey: Buffer.from(fromPublicKey, 'hex'),
+//       wc: 0,
+//     });
+
+//     // 获取钱包地址和 seqno
+//     const fromAddress = await wallet.getAddress();
+//     const seqno = await wallet.methods.seqno().call();
+
+//     // 构建转账消息
+//     const transfer = await wallet.methods.transfer({
+//       secretKey: Buffer.alloc(64), // 占位符，实际签名在客户端完成
+//       toAddress,
+//       amount: TonWeb.utils.toNano(amount),
+//       seqno,
+//       sendMode: 3,
+//     });
+
+//     // 获取未签名的 BOC
+//     const boc = await transfer.getBoc(false);
+
+//     res.status(200).json({
+//       fromAddress: fromAddress.toString(true, true, true),
+//       toAddress,
+//       amount,
+//       seqno,
+//       boc: boc.toString('base64'),
+//     });
+//   } catch (error) {
+//     console.error('构建转账请求失败:', error);
+//     res.status(500).json({ error: '构建转账请求失败' });
+//   }
+// });
+
+// // 定义路由，接收已签名的 BOC 并广播
+// router.post('/broadcast', async (req, res) => {
+//   try {
+//     const { signedBocBase64 } = req.body;
+
+//     if (!signedBocBase64) {
+//       return res.status(400).json({ error: '缺少 signedBocBase64 参数' });
+//     }
+
+//     // 将 Base64 编码的 BOC 转换为字节数组
+//     const bocBytes = Buffer.from(signedBocBase64, 'base64');
+
+//     // 使用 TonWeb 将 BOC 发送到区块链
+//     await tonweb.provider.sendBoc(bocBytes);
+
+//     res.status(200).json({ message: '交易已成功广播到区块链' });
+//   } catch (error) {
+//     console.error('广播交易失败:', error);
+//     res.status(500).json({ error: '广播交易失败' });
+//   }
+// });
+
 
 
 module.exports = router;

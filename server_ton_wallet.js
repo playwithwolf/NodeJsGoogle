@@ -33,17 +33,13 @@ async function getBalance() {
   await init();
   const address = await wallet.getAddress();
   const info = await tonweb.provider.getAddressInfo(address.toString());
+  console.log('状态:', info.state);
+  console.log('余额:', info.balance);
   return info.balance; // string，单位为 nanoTON
 }
 
 
-async function getStatus() {
-  await init();
-  const address = await wallet.getAddress();
-  const info = await tonweb.provider.getAddressInfo(address.toString());
-  console.log('状态:', info.state);
-  console.log('余额:', info.balance);
-}
+ 
 
 // 判断钱包是否已部署
 async function isDeployed() {
@@ -161,5 +157,4 @@ module.exports = {
   isDeployed,
   deploy,
   checkBalanceDebug,
-  getStatus,
 };

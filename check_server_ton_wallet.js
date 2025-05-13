@@ -13,6 +13,6 @@ const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug , getStatu
     console.log('[server_wallet] 钱包已部署');
   }
 
-  await getStatus();
+ // await getStatus();
   // await deploy();
 })();

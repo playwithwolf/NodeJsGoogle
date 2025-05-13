@@ -95,7 +95,7 @@ async function deploy() {
   await init();
 
   try {
-    const seqno = await waitForSeqno();
+    const seqno = 0
     const amountNano = TonWeb.utils.toNano('0.05'); // 建议部署费用留足
 
     console.log('[server_wallet] 部署钱包中...');

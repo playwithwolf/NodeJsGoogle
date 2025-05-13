@@ -85,7 +85,7 @@ async function sendTon(toAddress, amountTON) {
       amount: amountNano,
       seqno,
       payload: null,
-      sendMode: 1,
+      sendMode: 3,
     }).send();
 
     console.log('[server_wallet] 转账已发送');

@@ -6,7 +6,9 @@ const querystring = require('querystring');
 const tonMnemonic = require('tonweb-mnemonic');
 const TonWeb = require('tonweb');
 require('dotenv').config();
-const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TON_API));
+const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API),{
+    apiKey: process.env.TESTNET_API_KEY
+  });
 
 const { sendTon } =  require('./server_ton_wallet');
 

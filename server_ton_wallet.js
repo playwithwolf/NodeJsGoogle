@@ -3,7 +3,9 @@ require('dotenv').config();
 const TonWeb = require('tonweb');
 const tonMnemonic = require('tonweb-mnemonic');
 
-const provider = new TonWeb.HttpProvider(process.env.TON_API);
+const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API),{
+    apiKey: process.env.TESTNET_API_KEY
+});
 const tonweb = new TonWeb(provider);
 const WalletClass = tonweb.wallet.all.v3R2;
 
@@ -106,7 +108,7 @@ async function sendTon(toAddress, amountTON) {
         console.log('Transaction details:', JSON.stringify(result, null, 2));  // 打印详细的 JSON 格式内容
         if(result.hash!=undefined)
           break;  // 成功则跳出循环
-      } else {
+     
         
           console.log('[server_wallet] 遇到速率限制，等待重试...');
           retries++;
@@ -115,7 +117,7 @@ async function sendTon(toAddress, amountTON) {
           }
           await new Promise(r => setTimeout(r, delayTime));  // 等待 5 秒再重试
         
-      }
+     
     }
 
     // 等待 seqno + 1

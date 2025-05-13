@@ -172,12 +172,8 @@ try {
 router.post('/serverSendTon', async (req, res) => {
 
 try {
-    const { address , orderId , mnemonics , amountTON } = req.body;
-
-    if (!address) {
-      return res.status(400).json({ error: '地址不能为空' });
-    }
-
+    const { orderId , mnemonics , amountTON } = req.body;
+ 
     if (!orderId) {
       return res.status(400).json({ error: 'orderId不能为空' });
     }

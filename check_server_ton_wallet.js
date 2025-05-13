@@ -4,7 +4,6 @@ const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug} = require
   const balance = await getBalance();
   console.log('[server_wallet] balance = '+balance);
   await checkBalanceDebug();
-  
 
   const deployed = await isDeployed();
   if (!deployed) {

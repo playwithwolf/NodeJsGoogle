@@ -122,19 +122,19 @@ router.post('/createTonWallet', async (req, res) => {
     // console.log('[系统] 钱包部署交易已发送');
 
     // 5. 可选轮询钱包激活状态
-    let isDeployed = false;
-    for (let i = 0; i < 5; i++) {
-      const info = await tonweb.provider.getAddressInfo(addressStr);
-      if (info.state === 'active') {
-        isDeployed = true;
-        break;
-      }
-      await new Promise(r => setTimeout(r, 3000));
-    }
+    // let isDeployed = false;
+    // for (let i = 0; i < 5; i++) {
+    //   const info = await tonweb.provider.getAddressInfo(addressStr);
+    //   if (info.state === 'active') {
+    //     isDeployed = true;
+    //     break;
+    //   }
+    //   await new Promise(r => setTimeout(r, 3000));
+    // }
 
-    if (!isDeployed) {
-      return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
-    }
+    // if (!isDeployed) {
+    //   return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
+    // }
 
     // 6. 返回信息
     res.status(200).json({

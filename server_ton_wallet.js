@@ -76,7 +76,7 @@ async function sendTon(toAddress, amountTON) {
       secretKey: keyPair.secretKey,
       toAddress,
       amount: amountNano,
-      seqno: seqno,
+      seqno,
       payload: null,
       sendMode: 1,
     }).send();
@@ -85,7 +85,7 @@ async function sendTon(toAddress, amountTON) {
 
       // 等待 seqno + 1
     for (let i = 0; i < 10; i++) {
-      const newSeqno = await waitForSeqno();
+      const newSeqno = await wallet.methods.seqno().call();
       if (newSeqno > seqno) {
           console.log('[server_wallet] 转账已确认 on-chain');
           return result;

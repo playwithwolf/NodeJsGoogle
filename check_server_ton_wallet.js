@@ -12,5 +12,5 @@ const { getAddress, isDeployed , deploy, getBalance,checkBalanceDebug} = require
   } else {
     console.log('[server_wallet] 钱包已部署');
   }
-   await deploy();
+  // await deploy();
 })();

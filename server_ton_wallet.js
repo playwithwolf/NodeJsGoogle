@@ -146,7 +146,9 @@ async function sendTonHaveOrderId(toAddress, amountTON, orderId) {
 
  
 
-    const payloadbyte = TonWeb.utils.stringToBytes(orderId);
+    //const payloadbyte = TonWeb.utils.stringToBytes(orderId);
+    const payloadCell = new TonWeb.boc.Cell();
+    payloadCell.bits.writeString(orderId); 
 
     const sendTransaction = async () => {
       return wallet.methods.transfer({
@@ -154,7 +156,7 @@ async function sendTonHaveOrderId(toAddress, amountTON, orderId) {
         toAddress: toAddressStr,
         amount: amountNano,
         seqno,
-        payload: null,
+        payload: payloadCell,
         message: orderId,
         sendMode: 3,
       }).send();  // 注意：这只返回 `@type: "ok"`

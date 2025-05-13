@@ -88,7 +88,7 @@ async function sendTon(toAddress, amountTON) {
       sendMode: 3,
     }).send();
 
-    console.log('[server_wallet] 转账已发送');
+    console.log('[server_wallet] 转账已发送 1');
     console.log('[server_wallet] 转账结果:', JSON.stringify(result));
     console.log('Transaction hash:', result.hash);  // 打印交易哈希
     console.log('Transaction status:', result.status);  // 打印交易状态

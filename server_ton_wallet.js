@@ -76,14 +76,24 @@ async function sendTon(toAddress, amountTON) {
       secretKey: keyPair.secretKey,
       toAddress,
       amount: amountNano,
-      seqno,
+      seqno: seqno,
       payload: null,
-      sendMode: 3,
+      sendMode: 1,
     }).send();
 
     console.log('[server_wallet] 转账已发送');
 
-    return result;
+      // 等待 seqno + 1
+    for (let i = 0; i < 10; i++) {
+      const newSeqno = await waitForSeqno();
+      if (newSeqno > seqno) {
+          console.log('[server_wallet] 转账已确认 on-chain');
+          return result;
+      }
+      await new Promise(r => setTimeout(r, 3000));
+    }
+
+    throw new Error('服务器钱包转账交易未确认');
   } catch (err) {
     console.error('[server_wallet] 转账失败:', err);
     throw new Error('服务器钱包转账失败: ' + err.message);

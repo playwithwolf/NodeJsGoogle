@@ -79,30 +79,56 @@ async function sendTon(toAddress, amountTON) {
 
     console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}，当前 seqno=${seqno}`);
 
-    const result = await wallet.methods.transfer({
-      secretKey: keyPair.secretKey,
-      toAddress: toAddressStr,
-      amount: amountNano,
-      seqno,
-      payload: null,
-      sendMode: 3,
-    }).send();
+    const sendTransaction = async () => {
+      return wallet.methods.transfer({
+        secretKey: keyPair.secretKey,
+        toAddress: toAddressStr,
+        amount: amountNano,
+        seqno,
+        payload: null,
+        sendMode: 3,
+      }).send();
+    };
 
-    console.log('[server_wallet] 转账已发送 1');
-    console.log('[server_wallet] 转账结果:', JSON.stringify(result));
-    console.log('Transaction hash:', result.hash);  // 打印交易哈希
-    console.log('Transaction status:', result.status);  // 打印交易状态
-    console.log('Transaction details:', JSON.stringify(result, null, 2));  // 打印详细的 JSON 格式内容
+    let retries = 0;
+    const maxRetries = 5;  // 设置最大重试次数
+    const delayTime = 5000;  // 每次重试间隔 5 秒
 
-      // 等待 seqno + 1
+    // 重试机制
+    let result;
+    while (retries < maxRetries) {
+      try {
+        result = await sendTransaction();
+        console.log('[server_wallet] 转账已发送 1');
+        console.log('[server_wallet] 转账结果:', JSON.stringify(result));
+        console.log('Transaction hash:', result.hash);  // 打印交易哈希
+        console.log('Transaction status:', result.status);  // 打印交易状态
+        console.log('Transaction details:', JSON.stringify(result, null, 2));  // 打印详细的 JSON 格式内容
+        break;  // 成功则跳出循环
+      } catch (error) {
+        if (error.message.includes("Ratelimit exceed")) {
+          console.log('[server_wallet] 遇到速率限制，等待重试...');
+          retries++;
+          if (retries >= maxRetries) {
+            throw new Error('[server_wallet] 达到最大重试次数，仍然遭遇 Ratelimit exceed 错误');
+          }
+          await new Promise(r => setTimeout(r, delayTime));  // 等待 5 秒再重试
+        } else {
+          console.error('[server_wallet] 转账失败:', error.message);
+          throw error;  // 如果是其他错误，抛出错误
+        }
+      }
+    }
+
+    // 等待 seqno + 1
     for (let i = 0; i < 50; i++) {
       const newSeqno = await wallet.methods.seqno().call();
       console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，newSeqno 当前为:`, newSeqno);
       if (newSeqno > seqno) {
-          console.log('[server_wallet] 转账已确认 on-chain');
-          return result;
+        console.log('[server_wallet] 转账已确认 on-chain');
+        return result;
       }
-      await new Promise(r => setTimeout(r, 3000));
+      await new Promise(r => setTimeout(r, 5000));
     }
 
     throw new Error('服务器钱包转账交易未确认');
@@ -111,6 +137,7 @@ async function sendTon(toAddress, amountTON) {
     throw new Error('服务器钱包转账失败: ' + err.message);
   }
 }
+
 
 // 部署钱包
 async function deploy() {

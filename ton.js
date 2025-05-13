@@ -73,11 +73,37 @@ router.post('/createTonWallet', async (req, res) => {
     const addressStr = address.toString(true, true, false);
     console.log('[系统] 用户钱包地址:', addressStr);
 
+    // 2. 检查钱包是否已激活
+    const walletState = await tonweb.provider.getAddressInfo(addressStr);
+    console.log('[系统] 用户钱包地址状态:', walletState.state);
+    
+
     // 2. 部署钱包（激活钱包）
-    const deployTx = await userWallet.deploy(keyPair.secretKey);
-    console.log('[系统] 钱包部署deploy');
-    await deployTx.send();
-    console.log('[系统] 钱包部署交易已发送');
+    // 3. 部署钱包
+    let deployTx;
+    try {
+      deployTx = await userWallet.deploy(keyPair.secretKey);
+      console.log('[系统] 开始部署钱包');
+      
+      // 添加重试机制，确保部署交易成功
+      for (let i = 0; i < 5; i++) {
+        try {
+          await deployTx.send();
+          console.log('[系统] 钱包部署交易已发送');
+          break; // 成功发送则退出循环
+        } catch (error) {
+          console.error('[系统] 部署钱包失败，重试中:', error);
+          if (i === 4) {
+            throw new Error('钱包部署失败，请稍后重试');
+          }
+          await new Promise(r => setTimeout(r, 5000)); // 等待 5 秒后重试
+        }
+      }
+    } catch (error) {
+      console.error('[系统] 部署钱包失败:', error);
+      return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
+    }
+    
 
     // 3. 等待钱包部署完成（钱包状态变为 active）
     let isDeployed = false;

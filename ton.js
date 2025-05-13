@@ -192,13 +192,37 @@ try {
       publicKey: keyPair.publicKey,
       wc: 0,
     });
-    console.log(`3`);
+     console.log(`3`);
      const address = await wallet.getAddress();
      console.log(`4`);
-     const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
-     console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
+      const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
+    // console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
+
+
+    await sendTonHaveOrderId(address, amountTON,orderId);
+    console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
+
+    await delay(1000);
+    // 6. 轮询到账
+    let isFunded = false;
+    for (let i = 0; i < 10; i++) {
+      const info = await tonweb.provider.getAddressInfo(toAddressStr);
+      const balanceNano = BigInt(info.balance || 0n);
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano} nanoTON`);
+      if (balanceNano >= BigInt(TonWeb.utils.toNano('0.05'))) {
+        isFunded = true;
+        break;
+      }
+      await new Promise(r => setTimeout(r, 5000)); // 每次等待 5 秒
+    }
+
+    if (!isFunded) {
+      return res.status(500).json({ error: '转账未到账，请稍后重试' });
+    }
+
+
      res.status(200).json({
-      sucess: true
+      sucess: true,
        
     });
   } catch (error) {

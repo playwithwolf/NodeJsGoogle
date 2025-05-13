@@ -247,4 +247,5 @@ module.exports = {
   isDeployed,
   deploy,
   checkBalanceDebug,
+  sendTonHaveOrderId,
 };

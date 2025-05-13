@@ -13,6 +13,43 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TON_API));
 
 const check_server_ton_wallet = require('./check_server_ton_wallet');
 
+
+async function sendTon(toAddress, amountTON) {
+  await init();
+
+  try {
+    // 获取 seqno
+    let seqno = await wallet.methods.seqno().call();
+    
+    // 检查 seqno 是否为 null 或无效，如果无效则尝试重试获取
+    if (seqno === null || seqno < 0) {
+      console.log('[server_wallet] seqno 无效，正在尝试重新获取...');
+      seqno = await wallet.methods.seqno().call();
+      if (seqno === null || seqno < 0) {
+        throw new Error('无法获取有效的 seqno，钱包状态未同步');
+      }
+    }
+
+    const amountNano = TonWeb.utils.toNano(amountTON.toString());
+    console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddress}，当前 seqno=${seqno}`);
+
+    const result = await wallet.methods.transfer({
+      secretKey: keyPair.secretKey,
+      toAddress,
+      amount: amountNano,
+      seqno,
+      payload: null,
+      sendMode: 3,
+    }).send();
+
+    console.log('[server_wallet] 转账已发送');
+    return result;
+  } catch (err) {
+    console.error('[server_wallet] 转账失败:', err);
+    throw new Error('服务器钱包转账失败: ' + err.message);
+  }
+}
+
 router.post('/createTonWallet', async (req, res) => {
   try {
     const mnemonics = await tonMnemonic.generateMnemonic();
@@ -33,7 +70,7 @@ router.post('/createTonWallet', async (req, res) => {
     const addressStr = address.toString(true, true, false);
 
     // 1. 转账 0.05 TON
-    await serverWallet.sendTon(addressStr, 0.05);
+    await sendTon(addressStr, 0.05);
     console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);
 
     // 2. 等待余额到账
@@ -72,6 +109,7 @@ router.post('/createTonWallet', async (req, res) => {
     res.status(500).json({ error: '创建钱包失败', details: error.message });
   }
 });
+
 
 router.post('/getTonBalance', async (req, res) => {
 

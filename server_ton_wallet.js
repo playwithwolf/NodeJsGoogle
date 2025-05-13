@@ -95,33 +95,31 @@ async function sendTon(toAddress, amountTON) {
     const delayTime = 5000;  // 每次重试间隔 5 秒
 
     // 重试机制
-    let result;
+    let result = 'Ratelimit exceed';
     while (retries < maxRetries) {
-      try {
+      if(JSON.stringify(result) == 'Ratelimit exceed'){
         result = await sendTransaction();
-        console.log('[server_wallet] 转账已发送 1');
+        console.log('[server_wallet] 转账已发送 ');
         console.log('[server_wallet] 转账结果:', JSON.stringify(result));
         console.log('Transaction hash:', result.hash);  // 打印交易哈希
         console.log('Transaction status:', result.status);  // 打印交易状态
         console.log('Transaction details:', JSON.stringify(result, null, 2));  // 打印详细的 JSON 格式内容
-        break;  // 成功则跳出循环
-      } catch (error) {
-        if (error.message.includes("Ratelimit exceed")) {
+        if(result.hash!=undefined)
+          break;  // 成功则跳出循环
+      } else {
+        
           console.log('[server_wallet] 遇到速率限制，等待重试...');
           retries++;
           if (retries >= maxRetries) {
             throw new Error('[server_wallet] 达到最大重试次数，仍然遭遇 Ratelimit exceed 错误');
           }
           await new Promise(r => setTimeout(r, delayTime));  // 等待 5 秒再重试
-        } else {
-          console.error('[server_wallet] 转账失败:', error.message);
-          throw error;  // 如果是其他错误，抛出错误
-        }
+        
       }
     }
 
     // 等待 seqno + 1
-    for (let i = 0; i < 50; i++) {
+    for (let i = 0; i < 10; i++) {
       const newSeqno = await wallet.methods.seqno().call();
       console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，newSeqno 当前为:`, newSeqno);
       if (newSeqno > seqno) {

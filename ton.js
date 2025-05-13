@@ -14,6 +14,8 @@ const { sendTon } =  require('./server_ton_wallet');
 
 const check_server_ton_wallet = require('./check_server_ton_wallet');
 
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
+
 router.post('/createTonWallet', async (req, res) => {
   try {
     // 1. 生成助记词 & 密钥对
@@ -36,10 +38,12 @@ router.post('/createTonWallet', async (req, res) => {
     console.log('[系统] 用户钱包地址:', addressStr);
 
 
+    await delay(1000);
     // 5. 向地址转入启动资金（0.05 TON）
     await sendTon(address, 0.1);
     console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);
 
+    await delay(1000);
     // 6. 轮询到账
     let isFunded = false;
     for (let i = 0; i < 10; i++) {
@@ -57,7 +61,7 @@ router.post('/createTonWallet', async (req, res) => {
       return res.status(500).json({ error: '转账未到账，钱包部署失败，请稍后重试' });
     }
 
-
+    await delay(1000);
 
     // 2. 检查钱包是否已激活
     const walletState = await tonweb.provider.getAddressInfo(addressStr);
@@ -67,6 +71,7 @@ router.post('/createTonWallet', async (req, res) => {
       return res.status(400).json({ error: '钱包状态不适合部署，请检查钱包状态' });
     }
 
+    await delay(1000);
     // 3. 部署钱包（激活钱包）
     let deployTx;
     try {
@@ -92,6 +97,7 @@ router.post('/createTonWallet', async (req, res) => {
       return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
     }
 
+    await delay(1000);
     // 4. 等待钱包部署完成（钱包状态变为 active）
     let isDeployed = false;
     for (let i = 0; i < 5; i++) {

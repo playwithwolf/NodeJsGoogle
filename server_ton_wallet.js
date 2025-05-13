@@ -97,26 +97,31 @@ async function sendTon(toAddress, amountTON) {
     const delayTime = 5000;  // 每次重试间隔 5 秒
 
     // 重试机制
-    let result = 'Ratelimit exceed';
+    let result;
     while (retries < maxRetries) {
-      if(JSON.stringify(result) == 'Ratelimit exceed'){
         result = await sendTransaction();
-        console.log('[server_wallet] 转账已发送 ');
+
+        console.log('[server_wallet] 转账已发送');
         console.log('[server_wallet] 转账结果:', JSON.stringify(result));
-        console.log('Transaction hash:', result.hash);  // 打印交易哈希
-        console.log('Transaction status:', result.status);  // 打印交易状态
-        console.log('Transaction details:', JSON.stringify(result, null, 2));  // 打印详细的 JSON 格式内容
-        if(result.hash!=undefined)
-          break;  // 成功则跳出循环
-     
-        
+        console.log('Transaction hash:', result.hash);
+        console.log('Transaction status:', result.status);
+        console.log('Transaction details:', JSON.stringify(result, null, 2));
+
+        if (result && result.hash !== undefined) {
+          break;  // 转账成功，跳出循环
+        }
+
+        // 如果 result 表示速率限制错误，则重试
+        if (result === 'Ratelimit exceed' || result?.error === 'Ratelimit exceed') {
           console.log('[server_wallet] 遇到速率限制，等待重试...');
           retries++;
           if (retries >= maxRetries) {
             throw new Error('[server_wallet] 达到最大重试次数，仍然遭遇 Ratelimit exceed 错误');
           }
-          await new Promise(r => setTimeout(r, delayTime));  // 等待 5 秒再重试
-        
+          await new Promise(r => setTimeout(r, delayTime));
+        } else {
+          // 如果是其他错误，立即终止
+          throw new Error(`[server_wallet] 转账失败: ${JSON.stringify(result)}`);
         }
     }
 

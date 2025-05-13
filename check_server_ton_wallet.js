@@ -1,4 +1,4 @@
-const { getAddress, isDeployed } = require('./server_ton_wallet');
+const { getAddress, isDeployed , deploy} = require('./server_ton_wallet');
 
 (async () => {
   const deployed = await isDeployed();

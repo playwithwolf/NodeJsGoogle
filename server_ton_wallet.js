@@ -89,9 +89,13 @@ async function sendTon(toAddress, amountTON) {
     }).send();
 
     console.log('[server_wallet] 转账已发送');
+    console.log('[server_wallet] 转账结果:', JSON.stringify(result));
+    console.log('Transaction hash:', result.hash);  // 打印交易哈希
+    console.log('Transaction status:', result.status);  // 打印交易状态
+    console.log('Transaction details:', JSON.stringify(result, null, 2));  // 打印详细的 JSON 格式内容
 
       // 等待 seqno + 1
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 50; i++) {
       const newSeqno = await wallet.methods.seqno().call();
       console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，newSeqno 当前为:`, newSeqno);
       if (newSeqno > seqno) {

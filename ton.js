@@ -116,10 +116,10 @@ router.post('/createTonWallet', async (req, res) => {
       return res.status(500).json({ error: '转账未到账，钱包部署失败，请稍后重试' });
     }
 
-    // 4. 钱包合约部署
-    const deployTx = await userWallet.deploy(keyPair.secretKey);
-    await deployTx.send();
-    console.log('[系统] 钱包部署交易已发送');
+    // // 4. 钱包合约部署
+    // const deployTx = await userWallet.deploy(keyPair.secretKey);
+    // await deployTx.send();
+    // console.log('[系统] 钱包部署交易已发送');
 
     // 5. 可选轮询钱包激活状态
     let isDeployed = false;

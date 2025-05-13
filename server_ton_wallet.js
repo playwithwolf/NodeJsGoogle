@@ -86,6 +86,7 @@ async function sendTon(toAddress, amountTON) {
       // 等待 seqno + 1
     for (let i = 0; i < 10; i++) {
       const newSeqno = await wallet.methods.seqno().call();
+      console.log(`[server_wallet] 第 ${i + 1} 次尝试获取 seqno，newSeqno 当前为:`, newSeqno);
       if (newSeqno > seqno) {
           console.log('[server_wallet] 转账已确认 on-chain');
           return result;

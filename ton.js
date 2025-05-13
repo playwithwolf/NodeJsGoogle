@@ -73,6 +73,28 @@ router.post('/createTonWallet', async (req, res) => {
     const addressStr = address.toString(true, true, false);
     console.log('[系统] 用户钱包地址:', addressStr);
 
+    // 2. 部署钱包（激活钱包）
+    const deployTx = await userWallet.deploy(keyPair.secretKey);
+    await deployTx.send();
+    console.log('[系统] 钱包部署交易已发送');
+
+    // 3. 等待钱包部署完成（钱包状态变为 active）
+    let isDeployed = false;
+    for (let i = 0; i < 5; i++) {
+      const walletState = await tonweb.provider.getAddressInfo(addressStr);
+      console.log('[系统] 钱包状态:', walletState.state);
+
+      if (walletState.state === 'active') {
+        isDeployed = true;
+        break;
+      }
+      await new Promise(r => setTimeout(r, 3000)); // 等待 3 秒
+    }
+
+    if (!isDeployed) {
+      return res.status(500).json({ error: '钱包部署失败，请稍后重试' });
+    }
+
     // 2. 向地址转入启动资金（0.05 TON）
     await sendTon(addressStr, 0.05);
     console.log('[系统] 已向用户地址转入 0.05 TON:', addressStr);

@@ -75,6 +75,7 @@ router.post('/createTonWallet', async (req, res) => {
 
     // 2. 部署钱包（激活钱包）
     const deployTx = await userWallet.deploy(keyPair.secretKey);
+    console.log('[系统] 钱包部署deploy');
     await deployTx.send();
     console.log('[系统] 钱包部署交易已发送');
 

@@ -110,7 +110,7 @@ async function deploy() {
 
 
     console.log('[server_wallet] 钱包部署成功');
-    return result;
+   
   } catch (err) {
     console.error('[server_wallet] 部署钱包失败:', err);
     throw new Error('钱包部署失败: ' + err.message);

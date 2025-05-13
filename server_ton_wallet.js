@@ -64,6 +64,11 @@ async function sendTon(toAddress, amountTON) {
   }
 }
 
+async function isDeployed() {
+  await init();
+  return await wallet.isDeployed();
+}
+
 
 module.exports = {
   getAddress,

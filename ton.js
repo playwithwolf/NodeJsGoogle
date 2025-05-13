@@ -11,6 +11,8 @@ const serverWallet = require('./server_ton_wallet');
 
 const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TON_API));
 
+const serverWallet = require('./check_server_ton_wallet');
+
 router.post('/createTonWallet', async (req, res) => {
   try {
     const mnemonics = await tonMnemonic.generateMnemonic();

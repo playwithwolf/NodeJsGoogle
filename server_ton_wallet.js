@@ -74,4 +74,5 @@ module.exports = {
   getAddress,
   getBalance,
   sendTon,
+  isDeployed,
 };

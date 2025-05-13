@@ -154,7 +154,8 @@ async function sendTonHaveOrderId(toAddress, amountTON, orderId) {
         toAddress: toAddressStr,
         amount: amountNano,
         seqno,
-        payload: payloadbyte,
+        payload: null,
+        message: orderId,
         sendMode: 3,
       }).send();  // 注意：这只返回 `@type: "ok"`
     };

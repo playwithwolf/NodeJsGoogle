@@ -275,67 +275,41 @@ try {
 
 
 router.post('/sendTonToServer', async (req, res) => {
+  try {
+    const { orderId, mnemonics, amountTON } = req.body;
 
-try {
-    const { orderId , mnemonics , amountTON } = req.body;
- 
-    if (!orderId) {
-      return res.status(400).json({ 
-        error: 'orderId不能为空' ,
+    if (!orderId || !mnemonics || !amountTON) {
+      return res.status(400).json({
+        error: '参数缺失',
         success: false,
-        mnemonics: mnemonics,
-        amountTON: amountTON, 
+        orderId, mnemonics, amountTON
       });
     }
 
-    if (!mnemonics) {
-      return res.status(400).json({ 
-        error: 'mnemonics不能为空',
-        success: false,
-        orderId: orderId,
-        mnemonics: mnemonics,
-        amountTON: amountTON, 
+    const keyPair = await mnemonicToKeyPair(mnemonics);
 
-      });
-    }
-
-    if (!amountTON) {
-      return res.status(400).json({ 
-        error: 'amountTON不能为空',
-        success: false,
-        orderId: orderId,
-        mnemonics: mnemonics,
-        amountTON: amountTON, 
-      
-      });
-    }
-    
-    console.log(`1`);
-    const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
-    console.log(`2`);
+    const WalletClass = TonWeb.wallet.all.v3R2;
     const client_wallet = new WalletClass(tonweb.provider, {
       publicKey: keyPair.publicKey,
-      wc: 0,
+      wc: 0
     });
-     console.log(`3`);
-     const client_address = await client_wallet.getAddress();
-     console.log(`4`);
-     const client_addressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
 
-     const server_address = await getAddress()
-     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+    const client_address = await client_wallet.getAddress();
+    const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
 
+    const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 
-     const initInfo = await tonweb.provider.getAddressInfo(server_addressStr);
-     const initBalanceNano = BigInt(initInfo.balance || 0n);
-    // console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
+    // 获取服务器初始余额
+    const initInfo = await tonweb.provider.getAddressInfo(server_addressStr);
+    const initBalanceNano = BigInt(initInfo.balance || 0n);
 
+    // 发起转账
+    await sentClientTonHaveOrderId(client_wallet, amountTON, orderId, keyPair);
+    console.log(`[系统] 用户[${clientAddressStr}] 已向服务器地址[${server_addressStr}] 转入 ${amountTON} TON`);
 
-    await sentClientTonHaveOrderId(client_wallet, amountTON,orderId);
-    console.log(`[系统] 用户已向服务器地址转入 ${amountTON} TON: ${server_addressStr}  orderId:${orderId}`);
-
-    await delay(1000);
-    // 6. 轮询到账
+    // 轮询到账
+    const expectAmountNano = TonWeb.utils.toNano(amountTON.toString());
     let isFunded = false;
     for (let i = 0; i < 10; i++) {
       const info = await tonweb.provider.getAddressInfo(server_addressStr);
@@ -344,44 +318,37 @@ try {
 
       console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
 
-      if (delta >= amountTON) {
+      if (delta >= expectAmountNano) {
         isFunded = true;
         break;
       }
-      await new Promise(r => setTimeout(r, 5000)); // 每次等待 5 秒
+
+      await new Promise(r => setTimeout(r, 5000));
     }
 
     if (!isFunded) {
-      return res.status(500).json({ 
-        error: '转账未到账，请稍后重试', 
+      return res.status(500).json({
+        error: '转账未到账，请稍后重试',
         success: false,
-        orderId: orderId,
-        mnemonics: mnemonics,
-        amountTON: amountTON,
+        orderId, mnemonics, amountTON
       });
     }
 
-
-     res.status(200).json({
+    res.status(200).json({
       success: true,
-      orderId: orderId,
-      mnemonics: mnemonics,
-      amountTON: amountTON,
-   
+      orderId,
+      amountTON,
+      clientAddress: clientAddressStr
     });
   } catch (error) {
-     console.error('[serverSendTon] 发生错误:', error);
-     res.status(500).json({ 
+    console.error('[serverSendTon] 发生错误:', error);
+    res.status(500).json({
       error: error.message || String(error),
-      success: false,
-      // orderId: orderId,
-      // mnemonics: mnemonics,
-      // amountTON: amountTON,
-
-     });
+      success: false
+    });
   }
-
 });
+
 
 
 // router.post('/prepare-transfer', async (req, res) => {

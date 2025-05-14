@@ -65,6 +65,19 @@ async function waitForSeqno(maxTries = 10, delay = 3000) {
   throw new Error('无法获取有效的 seqno');
 }
 
+// 等待有效 seqno
+async function waitForClientSeqno(wallet,maxTries = 10, delay = 3000) {
+  for (let i = 0; i < maxTries; i++) {
+    const seqno = await wallet.methods.seqno().call();
+    if (typeof seqno === 'number' && seqno >= 0) {
+      return seqno;
+    }
+    console.log(`[client_wallet] 第 ${i + 1} 次尝试获取 seqno，当前为:`, seqno);
+    await new Promise(resolve => setTimeout(resolve, delay));
+  }
+  throw new Error('无法获取有效的 seqno');
+}
+
 // 向某地址发送 TON
 async function sendTon(toAddress, amountTON) {
   await init();
@@ -200,6 +213,84 @@ async function sendTonHaveOrderId(toAddress, amountTON, orderId) {
   }
 }
 
+
+async function sentClientTonHaveOrderId(client_wallet, amountTON, orderId) {
+  await init();
+  try {
+    const deployed = await isDeployed();
+    if (!deployed) {
+      throw new Error('服务器钱包尚未部署，无法发送交易');
+    }
+
+    const  toAddress = await getAddress();
+
+     const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, true, false);
+    
+    const clientseqno = await waitForClientSeqno(client_wallet);
+
+    const client_address = await client_wallet.getAddress();
+    
+    const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
+
+    const amountNano = TonWeb.utils.toNano(amountTON.toString());
+
+    console.log(`[${clientAddressStr}] 发送 ${amountTON} TON 到 [server_wallet]，当前 seqno=${clientseqno}`);
+
+ 
+
+    //const payloadbyte = TonWeb.utils.stringToBytes(orderId);
+    const payloadCell = new TonWeb.boc.Cell();
+    payloadCell.bits.writeString(orderId); 
+
+    const sendTransaction_client = async () => {
+      return client_wallet.methods.transfer({
+        secretKey: keyPair.secretKey,
+        toAddress: toAddressStr,
+        amount: amountNano,
+        seqno: clientseqno,
+        payload: payloadCell,
+        message: orderId,
+        sendMode: 3,
+      }).send();  // 注意：这只返回 `@type: "ok"`
+    };
+
+    let retries = 0;
+    const maxRetries = 5;
+    const delayTime = 5000;
+    let result;
+
+    // ========== 发送交易重试 ==========
+    while (retries < maxRetries) {
+      try {
+        result = await sendTransaction_client();
+        console.log('['+clientAddressStr+'] 转账请求:', JSON.stringify(result));
+
+        if (result && result['@type'] === 'ok') {
+          console.log('['+clientAddressStr+'] 转账请求发送成功:', JSON.stringify(result));
+          break;  // 表示 send() 成功调用
+        }
+      } catch (err) {
+        if (err.message.includes('Ratelimit exceed')) {
+          console.warn('['+clientAddressStr+'] 遇到速率限制，等待重试...');
+        } else {
+          console.error('['+clientAddressStr+'] 转账失败:', err.message);
+          throw new Error('['+clientAddressStr+'] 转账失败: ' + err.message);
+        }
+      }
+
+      retries++;
+      if (retries >= maxRetries) {
+        throw new Error('['+clientAddressStr+'] 达到最大重试次数，仍然无法发送交易');
+      }
+      await new Promise(r => setTimeout(r, delayTime));
+    }
+
+     
+  } catch (err) {
+    console.error('['+clientAddressStr+'] 转账失败:', err);
+    throw new Error('服务器钱包转账失败: ' + err.message);
+  }
+}
 
 // 部署钱包
 async function deploy() {

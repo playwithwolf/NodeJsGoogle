@@ -175,15 +175,35 @@ try {
     const { orderId , mnemonics , amountTON } = req.body;
  
     if (!orderId) {
-      return res.status(400).json({ error: 'orderId不能为空' });
+      return res.status(400).json({ 
+        error: 'orderId不能为空' ,
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON, 
+      });
     }
 
     if (!mnemonics) {
-      return res.status(400).json({ error: 'mnemonics不能为空' });
+      return res.status(400).json({ 
+        error: 'mnemonics不能为空',
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON, 
+
+      });
     }
 
     if (!amountTON) {
-      return res.status(400).json({ error: 'amountTON不能为空' });
+      return res.status(400).json({ 
+        error: 'amountTON不能为空',
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON, 
+      
+      });
     }
     console.log(`1`);
     const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
@@ -195,7 +215,10 @@ try {
      console.log(`3`);
      const address = await wallet.getAddress();
      console.log(`4`);
-      const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
+     const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
+
+     const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
+     const initBalanceNano = BigInt(initInfo.balance || 0n);
     // console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
 
 
@@ -208,8 +231,10 @@ try {
     for (let i = 0; i < 10; i++) {
       const info = await tonweb.provider.getAddressInfo(toAddressStr);
       const balanceNano = BigInt(info.balance || 0n);
-      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano} nanoTON`);
-      if (balanceNano >= BigInt(TonWeb.utils.toNano('0.05'))) {
+      const delta = balanceNano - initBalanceNano;
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
+
+      if (delta >= amountTON) {
         isFunded = true;
         break;
       }
@@ -217,17 +242,139 @@ try {
     }
 
     if (!isFunded) {
-      return res.status(500).json({ error: '转账未到账，请稍后重试' });
+      return res.status(500).json({ 
+        error: '转账未到账，请稍后重试', 
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON,
+      });
     }
 
 
      res.status(200).json({
-      sucess: true,
-       
+      success: true,
+      orderId: orderId,
+      mnemonics: mnemonics,
+      amountTON: amountTON,
+   
     });
   } catch (error) {
      console.error('[serverSendTon] 发生错误:', error);
-     res.status(500).json({ error: error.message || String(error) });
+     res.status(500).json({ 
+      error: error.message || String(error),
+      success: false,
+      orderId: orderId,
+      mnemonics: mnemonics,
+      amountTON: amountTON,
+
+     });
+  }
+
+});
+
+
+router.post('/sendTonToServer', async (req, res) => {
+
+try {
+    const { orderId , mnemonics , amountTON } = req.body;
+ 
+    if (!orderId) {
+      return res.status(400).json({ 
+        error: 'orderId不能为空' ,
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON, 
+      });
+    }
+
+    if (!mnemonics) {
+      return res.status(400).json({ 
+        error: 'mnemonics不能为空',
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON, 
+
+      });
+    }
+
+    if (!amountTON) {
+      return res.status(400).json({ 
+        error: 'amountTON不能为空',
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON, 
+      
+      });
+    }
+    
+    console.log(`1`);
+    const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    console.log(`2`);
+    const wallet = new WalletClass(tonweb.provider, {
+      publicKey: keyPair.publicKey,
+      wc: 0,
+    });
+     console.log(`3`);
+     const address = await wallet.getAddress();
+     console.log(`4`);
+     const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
+     const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
+     const initBalanceNano = BigInt(initInfo.balance || 0n);
+    // console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
+
+
+    await sendTonHaveOrderId(wallet, amountTON,orderId);
+    console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
+
+    await delay(1000);
+    // 6. 轮询到账
+    let isFunded = false;
+    for (let i = 0; i < 10; i++) {
+      const info = await tonweb.provider.getAddressInfo(toAddressStr);
+      const balanceNano = BigInt(info.balance || 0n);
+      const delta = balanceNano - initBalanceNano;
+
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
+
+      if (delta >= amountTON) {
+        isFunded = true;
+        break;
+      }
+      await new Promise(r => setTimeout(r, 5000)); // 每次等待 5 秒
+    }
+
+    if (!isFunded) {
+      return res.status(500).json({ 
+        error: '转账未到账，请稍后重试', 
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON,
+      });
+    }
+
+
+     res.status(200).json({
+      success: true,
+      orderId: orderId,
+      mnemonics: mnemonics,
+      amountTON: amountTON,
+   
+    });
+  } catch (error) {
+     console.error('[serverSendTon] 发生错误:', error);
+     res.status(500).json({ 
+      error: error.message || String(error),
+      success: false,
+      orderId: orderId,
+      mnemonics: mnemonics,
+      amountTON: amountTON,
+
+     });
   }
 
 });

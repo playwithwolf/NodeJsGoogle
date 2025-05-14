@@ -409,9 +409,10 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
     // 提取交易哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => {
       const inMsg = tx.in_msg || {};
+      const data = inMsg.msg_data ? inMsg.msg_data.body : '';
       return {
         hash: tx.transaction_id.hash,
-        realHash: getRealTxHashFromDataBase64(tx.data),
+        realHash: getRealTxHashFromDataBase64(data),
         amount: TonWeb.utils.fromNano(inMsg.value || '0'),
         time: new Date(tx.utime * 1000),
         from: inMsg.source || 'external',

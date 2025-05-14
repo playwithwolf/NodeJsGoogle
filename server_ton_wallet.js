@@ -327,6 +327,16 @@ async function checkBalanceDebug() {
 }
 
 
+function decodePayloadBase64(base64Str) {
+  try {
+    const slice = TonWeb.boc.Cell.oneFromBoc(base64Str).beginParse();
+    return slice.readString();
+  } catch (e) {
+    console.log("解码失败1 e = "+e)
+    return '';
+  }
+}
+
 async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
   try {
     // 构建 API 请求 URL
@@ -355,8 +365,9 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       let payload = '';
       if (payloadBytes) {
         try {
-          payload = Buffer.from(payloadBytes, 'base64').toString('utf-8');
+          payload = decodePayloadBase64(payload_bytes);
         } catch (e) {
+          console.log("解码失败 e = "+e)
           payload = '';  // 如果解码失败，设置为空字符串
         }
       }

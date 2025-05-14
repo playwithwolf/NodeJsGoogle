@@ -3,6 +3,7 @@ require('dotenv').config();
 const TonWeb = require('tonweb');
 const tonMnemonic = require('tonweb-mnemonic');
 const { v4: uuidv4 } = require('uuid');
+const fetch = require('node-fetch');
 
 
 const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
@@ -326,25 +327,40 @@ async function checkBalanceDebug() {
 }
 
 
-async function getTransactionsForOrderId(serverAddress, orderId) {
+async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
   try {
-    const transactions = await tonweb.provider.getTransactionHistory(serverAddress);
-    
+    const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
+
+    const transactions = data.result;
+
     const filteredTransactions = transactions.filter(tx => {
-      // 检查 tx.message 或 tx.payload 中是否包含 orderId
-      const message = tx.message || '';
-      const payload = tx.payload ? TonWeb.utils.bytesToString(tx.payload) : '';
+      const inMsg = tx.in_msg || {};
+      const message = inMsg.message || '';
+      const payloadBytes = inMsg.payload_bytes;
+
+      let payload = '';
+      if (payloadBytes) {
+        try {
+          payload = TonWeb.utils.bytesToString(Buffer.from(payloadBytes, 'base64'));
+        } catch (e) {
+          payload = '';
+        }
+      }
+
       return message.includes(orderId) || payload.includes(orderId);
     });
 
-    // 按时间戳排序，越近的排前面
-    filteredTransactions.sort((a, b) => b.time - a.time);
+    filteredTransactions.sort((a, b) => b.utime - a.utime);
 
-    // 提取所需的信息：哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => ({
-      hash: tx.hash,  // 交易哈希
-      amount: TonWeb.utils.fromNano(tx.amount),  // 转账金额
-      time: new Date(tx.time * 1000),  // 转账时间（转换为日期格式）
+      hash: tx.transaction_id.hash,
+      amount: TonWeb.utils.fromNano(tx.in_msg.value || '0'),
+      time: new Date(tx.utime * 1000),
     }));
 
     return transactionDetails;

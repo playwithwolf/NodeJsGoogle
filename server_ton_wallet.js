@@ -270,7 +270,8 @@ async function sentClientTonHaveOrderId(client_wallet, amountTON, orderId) {
           break;  // 表示 send() 成功调用
         }
       } catch (err) {
-        if (err.message.includes('Ratelimit exceed')) {
+        console.error('完整错误对象:', err);
+        if (typeof err?.message === 'string' && err.message.includes('Ratelimit exceed')) {
           console.warn('['+clientAddressStr+'] 遇到速率限制，等待重试...');
         } else {
           console.error('['+clientAddressStr+'] 转账失败:', err.message);

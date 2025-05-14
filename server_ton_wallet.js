@@ -4,6 +4,8 @@ const TonWeb = require('tonweb');
 const tonMnemonic = require('tonweb-mnemonic');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
+const crypto = require('crypto');
+const { Cell } = TonWeb.boc;
 
 
 const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
@@ -337,10 +339,22 @@ function decodePayloadBase64(base64Str) {
   }
 }
 
-function base64ToReversedHex(base64Hash) {
-  const buffer = Buffer.from(base64Hash, 'base64');
-  const reversed = Buffer.from(buffer).reverse();  // 反转字节顺序
-  return reversed.toString('hex');
+// function base64ToReversedHex(base64Hash) {
+//   const buffer = Buffer.from(base64Hash, 'base64');
+//   const reversed = Buffer.from(buffer).reverse();  // 反转字节顺序
+//   return reversed.toString('hex');
+// }
+
+function getRealTxHashFromDataBase64(base64Data) {
+  try {
+    const cell = TonWeb.boc.Cell.oneFromBoc(Buffer.from(base64Data, 'base64'))[0];
+    const bocBytes = cell.toBoc();
+    const hashBuffer = require('crypto').createHash('sha256').update(bocBytes).digest();
+    return hashBuffer.toString('hex');
+  } catch (e) {
+    console.warn('⚠️ 解析真实交易哈希失败:', e.message);
+    return '';
+  }
 }
 
 async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
@@ -397,7 +411,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       const inMsg = tx.in_msg || {};
       return {
         hash: tx.transaction_id.hash,
-        hashHex: base64ToReversedHex(tx.transaction_id.hash),
+        realHash: getRealTxHashFromDataBase64(tx.data),
         amount: TonWeb.utils.fromNano(inMsg.value || '0'),
         time: new Date(tx.utime * 1000),
         from: inMsg.source || 'external',

@@ -295,7 +295,9 @@ router.post('/sendTonToServer', async (req, res) => {
 
     const clientInfo = await tonweb.provider.getAddressInfo(clientAddressStr);
     const clientBalance = BigInt(clientInfo.balance || 0n);
+    console.log('[debug] amountTON 类型:', typeof amountTON, amountTON);
     const transferAmount = TonWeb.utils.toNano(amountTON.toString());
+    console.log('[debug] transferAmount:', transferAmount.toString());
     const estimatedFee = TonWeb.utils.toNano('0.03');  // 保守估计手续费为 0.03 TON
 
     if (clientBalance < transferAmount + estimatedFee) {

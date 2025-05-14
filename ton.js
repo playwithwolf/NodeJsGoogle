@@ -286,7 +286,7 @@ router.post('/sendTonToServer', async (req, res) => {
       });
     }
 
-    const keyPair = await mnemonicToKeyPair(mnemonics);
+    const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
 
     const WalletClass = TonWeb.wallet.all.v3R2;
     const client_wallet = new WalletClass(tonweb.provider, {

@@ -4,6 +4,7 @@ const TonWeb = require('tonweb');
 const tonMnemonic = require('tonweb-mnemonic');
 const { v4: uuidv4 } = require('uuid');
 
+
 const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
 });

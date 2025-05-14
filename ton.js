@@ -264,9 +264,9 @@ try {
      res.status(500).json({ 
       error: error.message || String(error),
       success: false,
-      orderId: orderId,
-      mnemonics: mnemonics,
-      amountTON: amountTON,
+      // orderId: orderId,
+      // mnemonics: mnemonics,
+      // amountTON: amountTON,
 
      });
   }
@@ -283,7 +283,6 @@ try {
       return res.status(400).json({ 
         error: 'orderId不能为空' ,
         success: false,
-        orderId: orderId,
         mnemonics: mnemonics,
         amountTON: amountTON, 
       });
@@ -314,27 +313,32 @@ try {
     console.log(`1`);
     const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
     console.log(`2`);
-    const wallet = new WalletClass(tonweb.provider, {
+    const client_wallet = new WalletClass(tonweb.provider, {
       publicKey: keyPair.publicKey,
       wc: 0,
     });
      console.log(`3`);
-     const address = await wallet.getAddress();
+     const client_address = await client_wallet.getAddress();
      console.log(`4`);
-     const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
-     const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
+     const client_addressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
+
+     const server_address = await getAddress()
+     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+
+     const initInfo = await tonweb.provider.getAddressInfo(server_addressStr);
      const initBalanceNano = BigInt(initInfo.balance || 0n);
     // console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
 
 
-    await sendTonHaveOrderId(wallet, amountTON,orderId);
-    console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
+    await sentClientTonHaveOrderId(client_wallet, amountTON,orderId);
+    console.log(`[系统] 用户已向服务器地址转入 ${amountTON} TON: ${server_addressStr}  orderId:${orderId}`);
 
     await delay(1000);
     // 6. 轮询到账
     let isFunded = false;
     for (let i = 0; i < 10; i++) {
-      const info = await tonweb.provider.getAddressInfo(toAddressStr);
+      const info = await tonweb.provider.getAddressInfo(server_addressStr);
       const balanceNano = BigInt(info.balance || 0n);
       const delta = balanceNano - initBalanceNano;
 
@@ -370,9 +374,9 @@ try {
      res.status(500).json({ 
       error: error.message || String(error),
       success: false,
-      orderId: orderId,
-      mnemonics: mnemonics,
-      amountTON: amountTON,
+      // orderId: orderId,
+      // mnemonics: mnemonics,
+      // amountTON: amountTON,
 
      });
   }

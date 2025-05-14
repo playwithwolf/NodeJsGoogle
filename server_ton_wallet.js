@@ -357,11 +357,11 @@ function getRealTxHashFromDataBase64(base64Data) {
       console.warn('⚠️ BOC 数据解析失败');
       return '';
     }
-    console.log(' cell[0] = ' + cell[0]); 
+
     // 3. 获取 BOC 的字节表示
     const bocBytes = cell[0].toBoc();
     console.log('BOC 字节数据:', bocBytes.toString('hex')); // 打印 BOC 字节数据
- 
+
     // 4. 计算 SHA256 哈希
     const hashBuffer = crypto.createHash('sha256').update(bocBytes).digest();
     const hashHex = hashBuffer.toString('hex');
@@ -428,7 +428,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
     const transactionDetails = filteredTransactions.map(tx => {
        console.log("tx = " +JSON.stringify(tx))
       const inMsg = tx.in_msg || {};
-      const data = inMsg.msg_data ? inMsg.msg_data.body : '';
+      const data = tx.data
       console.log("data = " +data)
       return {
         hash: tx.transaction_id.hash,

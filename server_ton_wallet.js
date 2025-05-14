@@ -358,6 +358,7 @@ function getRealTxHashFromDataBase64(base64Data) {
       return '';
     }
 
+    console.log('cell[0] = '+cell[0]);
     // 3. 获取 BOC 的字节表示
     const bocBytes = cell[0].toBoc();
     console.log('BOC 字节数据:', bocBytes.toString('hex')); // 打印 BOC 字节数据
@@ -428,7 +429,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
     const transactionDetails = filteredTransactions.map(tx => {
        console.log("tx = " +JSON.stringify(tx))
       const inMsg = tx.in_msg || {};
-      const data = tx.data
+      const data = inMsg.msg_data ? inMsg.msg_data.body : '';
       console.log("data = " +data)
       return {
         hash: tx.transaction_id.hash,

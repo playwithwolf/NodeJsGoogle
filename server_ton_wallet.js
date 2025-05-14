@@ -325,6 +325,36 @@ async function checkBalanceDebug() {
   console.log('[balance]', info.balance);
 }
 
+
+async function getTransactionsForOrderId(serverAddress, orderId) {
+  try {
+    const transactions = await tonweb.provider.getTransactionHistory(serverAddress);
+    
+    const filteredTransactions = transactions.filter(tx => {
+      // 检查 tx.message 或 tx.payload 中是否包含 orderId
+      const message = tx.message || '';
+      const payload = tx.payload ? TonWeb.utils.bytesToString(tx.payload) : '';
+      return message.includes(orderId) || payload.includes(orderId);
+    });
+
+    // 按时间戳排序，越近的排前面
+    filteredTransactions.sort((a, b) => b.time - a.time);
+
+    // 提取所需的信息：哈希、金额和时间
+    const transactionDetails = filteredTransactions.map(tx => ({
+      hash: tx.hash,  // 交易哈希
+      amount: TonWeb.utils.fromNano(tx.amount),  // 转账金额
+      time: new Date(tx.time * 1000),  // 转账时间（转换为日期格式）
+    }));
+
+    return transactionDetails;
+  } catch (err) {
+    console.error('获取交易记录失败:', err);
+    throw new Error('获取交易记录失败: ' + err.message);
+  }
+}
+
+
 module.exports = {
   init,
   getAddress,
@@ -335,4 +365,5 @@ module.exports = {
   checkBalanceDebug,
   sendTonHaveOrderId,
   sentClientTonHaveOrderId,
+  getTransactionsForOrderId,
 };

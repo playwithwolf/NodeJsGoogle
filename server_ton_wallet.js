@@ -353,10 +353,10 @@ function getRealTxHashFromDataBase64(base64Data) {
 
     // 2. 使用 TonWeb 解析 BOC 数据
 
-    console.log('TonWeb:', TonWeb);
-    console.log('TonWeb.boc:', TonWeb.boc);
-    console.log('TonWeb.boc.Cell:', TonWeb.boc.Cell);
-    console.log('TonWeb.boc.Cell.oneFromBoc:', TonWeb.boc.Cell.oneFromBoc);
+    // console.log('TonWeb:', TonWeb);
+    // console.log('TonWeb.boc:', TonWeb.boc);
+    // console.log('TonWeb.boc.Cell:', TonWeb.boc.Cell);
+    // console.log('TonWeb.boc.Cell.oneFromBoc:', TonWeb.boc.Cell.oneFromBoc);
 
     const cell = TonWeb.boc.Cell.oneFromBoc(dataBuffer);
     console.log('cell = ', cell);

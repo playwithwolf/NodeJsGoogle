@@ -366,7 +366,7 @@ function getRealTxHashFromDataBase64(base64Data) {
 
     return hashHex;
   } catch (e) {
-    console.warn('⚠️ 解析真实交易哈希失败:', e);
+    console.warn('⚠️ 解析真实交易哈希失败 2 :', e);
     return '';
   }
 }

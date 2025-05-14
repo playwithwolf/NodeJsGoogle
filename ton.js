@@ -174,40 +174,18 @@ router.post('/serverSendTon', async (req, res) => {
 try {
     const { orderId , mnemonics , amountTON } = req.body;
  
-    if (!orderId) {
-      return res.status(400).json({ 
-        error: 'orderId不能为空' ,
+    if (!orderId || !mnemonics || !amountTON) {
+      return res.status(400).json({
+        error: '参数缺失',
         success: false,
-        orderId: orderId,
-        mnemonics: mnemonics,
-        amountTON: amountTON, 
+        orderId, mnemonics, amountTON
       });
     }
 
-    if (!mnemonics) {
-      return res.status(400).json({ 
-        error: 'mnemonics不能为空',
-        success: false,
-        orderId: orderId,
-        mnemonics: mnemonics,
-        amountTON: amountTON, 
-
-      });
-    }
-
-    if (!amountTON) {
-      return res.status(400).json({ 
-        error: 'amountTON不能为空',
-        success: false,
-        orderId: orderId,
-        mnemonics: mnemonics,
-        amountTON: amountTON, 
-      
-      });
-    }
     console.log(`1`);
     const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
     console.log(`2`);
+    const WalletClass = tonweb.wallet.all.v3R2;
     const wallet = new WalletClass(tonweb.provider, {
       publicKey: keyPair.publicKey,
       wc: 0,
@@ -221,11 +199,29 @@ try {
      const initBalanceNano = BigInt(initInfo.balance || 0n);
     // console.log(`[server_wallet] 发送 ${amountTON} TON 到 ${toAddressStr}`);
 
+    // 获取服务器钱包的当前余额
+    const serverBalance = initBalanceNano;
+    const transferAmountNano = TonWeb.utils.toNano(amountTON.toString());
+    const estimatedFee = TonWeb.utils.toNano('0.03');  // 假设手续费为 0.03 TON
+
+    // 判断余额是否足够
+    if (serverBalance < transferAmountNano + estimatedFee) {
+      console.log(`[系统] 服务器钱包余额不足，无法完成转账（余额：${TonWeb.utils.fromNano(serverBalance.toString())} TON，转账需：${TonWeb.utils.fromNano((transferAmountNano + estimatedFee).toString())} TON）`);
+      return res.status(400).json({
+        error: '服务器钱包余额不足，无法完成转账',
+        success: false,
+        currentBalance: TonWeb.utils.fromNano(serverBalance.toString()),
+        requiredBalance: TonWeb.utils.fromNano((transferAmountNano + estimatedFee).toString())
+      });
+    }
+
 
     await sendTonHaveOrderId(address, amountTON,orderId);
     console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
 
     await delay(1000);
+    const expectAmountNano = TonWeb.utils.toNano(amountTON.toString());
+    const tolerance = TonWeb.utils.toNano('0.001');  // 容差 0.001 TON
     // 6. 轮询到账
     let isFunded = false;
     for (let i = 0; i < 10; i++) {
@@ -234,7 +230,7 @@ try {
       const delta = balanceNano - initBalanceNano;
       console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
 
-      if (delta >= amountTON) {
+      if (delta + tolerance >= expectAmountNano) {
         isFunded = true;
         break;
       }
@@ -297,6 +293,21 @@ router.post('/sendTonToServer', async (req, res) => {
     const client_address = await client_wallet.getAddress();
     const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
 
+    const clientInfo = await tonweb.provider.getAddressInfo(clientAddressStr);
+    const clientBalance = BigInt(clientInfo.balance || 0n);
+    const transferAmount = TonWeb.utils.toNano(amountTON.toString());
+    const estimatedFee = TonWeb.utils.toNano('0.03');  // 保守估计手续费为 0.03 TON
+
+    if (clientBalance < transferAmount + estimatedFee) {
+      return res.status(400).json({
+        error: '钱包余额不足，无法完成转账（需包含手续费）',
+        success: false,
+        clientAddress: clientAddressStr,
+        currentBalanceTON: TonWeb.utils.fromNano(clientBalance.toString()),
+        requiredTON: TonWeb.utils.fromNano((transferAmount + estimatedFee).toString())
+      });
+    }
+
     const server_address = await getAddress();
     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 
@@ -310,6 +321,7 @@ router.post('/sendTonToServer', async (req, res) => {
 
     // 轮询到账
     const expectAmountNano = TonWeb.utils.toNano(amountTON.toString());
+    const tolerance = TonWeb.utils.toNano('0.001');
     let isFunded = false;
     for (let i = 0; i < 10; i++) {
       const info = await tonweb.provider.getAddressInfo(server_addressStr);
@@ -318,7 +330,7 @@ router.post('/sendTonToServer', async (req, res) => {
 
       console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
 
-      if (delta >= expectAmountNano) {
+      if (delta + tolerance >= expectAmountNano) {
         isFunded = true;
         break;
       }

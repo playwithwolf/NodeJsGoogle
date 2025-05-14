@@ -337,6 +337,12 @@ function decodePayloadBase64(base64Str) {
   }
 }
 
+function base64ToReversedHex(base64Hash) {
+  const buffer = Buffer.from(base64Hash, 'base64');
+  const reversed = Buffer.from(buffer).reverse();  // 反转字节顺序
+  return reversed.toString('hex');
+}
+
 async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
   try {
     // 构建 API 请求 URL
@@ -387,11 +393,17 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
     filteredTransactions.sort((a, b) => b.utime - a.utime);
 
     // 提取交易哈希、金额和时间
-    const transactionDetails = filteredTransactions.map(tx => ({
-      hash: tx.transaction_id.hash,  // 交易哈希
-      amount: TonWeb.utils.fromNano(tx.in_msg.value || '0'),  // 转账金额，转换为 TON
-      time: new Date(tx.utime * 1000),  // 转账时间（转换为日期格式）
-    }));
+    const transactionDetails = filteredTransactions.map(tx => {
+      const inMsg = tx.in_msg || {};
+      return {
+        hash: tx.transaction_id.hash,
+        hashHex: base64ToReversedHex(tx.transaction_id.hash),
+        amount: TonWeb.utils.fromNano(inMsg.value || '0'),
+        time: new Date(tx.utime * 1000),
+        from: inMsg.source || 'external',
+        to: inMsg.destination || serverAddress,
+      };
+    });
 
     return transactionDetails;
   } catch (err) {

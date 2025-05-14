@@ -348,25 +348,16 @@ function decodePayloadBase64(base64Str) {
 function getRealTxHashFromDataBase64(base64Data) {
   try {
     const dataBuffer = Buffer.from(base64Data, 'base64');
-    console.log('解码后的数据（Buffer）:', dataBuffer.toString('hex'));
+    console.log('原始 BOC Buffer:', dataBuffer.toString('hex'));
 
-    const cells = TonWeb.boc.Cell.fromBoc(dataBuffer);
-    if (!cells || cells.length === 0) {
-      console.warn('⚠️ BOC 数据解析失败');
-      return '';
-    }
-
-    const rootCell = cells[0];
-    const bocBytes = rootCell.toBoc();
-    console.log('BOC 字节数据:', bocBytes.toString('hex'));
-
-    const hashBuffer = crypto.createHash('sha256').update(bocBytes).digest();
+    // 直接对原始 BOC 字节数据计算哈希
+    const hashBuffer = crypto.createHash('sha256').update(dataBuffer).digest();
     const hashHex = hashBuffer.toString('hex');
     console.log('计算出的真实交易哈希:', hashHex);
 
     return hashHex;
   } catch (e) {
-    console.warn('⚠️ 解析真实交易哈希失败 2 :', e);
+    console.warn('⚠️ 计算真实交易哈希失败:', e.message);
     return '';
   }
 }

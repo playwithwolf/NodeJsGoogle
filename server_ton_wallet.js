@@ -327,43 +327,47 @@ async function checkBalanceDebug() {
 }
 
 
-async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
+// 获取与订单 ID 相关的所有交易记录
+async function getTransactionsForOrderId(serverAddress, orderId) {
   try {
-    const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
-
-    console.log(url);
-    const response = await fetch(url);
-    const data = await response.json();
-
-    if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
-
-    const transactions = data.result;
-
+    // 获取交易历史记录
+    const transactions = await tonweb.provider.getTransactionHistory(serverAddress);
+    
+    // 打印获取到的交易记录（调试用）
+    console.log('所有交易记录:', transactions);
+    
+    // 过滤包含 orderId 的交易
     const filteredTransactions = transactions.filter(tx => {
-      const inMsg = tx.in_msg || {};
-      const message = inMsg.message || '';
-      const payloadBytes = inMsg.payload_bytes;
-
+      // 获取消息或有效负载
+      const message = tx.message || '';
       let payload = '';
-      if (payloadBytes) {
-        try {
-          payload = TonWeb.utils.bytesToString(Buffer.from(payloadBytes, 'base64'));
-        } catch (e) {
-          payload = '';
-        }
+      
+      // 如果 payload 存在，则将其字节流解码为字符串
+      if (tx.payload) {
+        payload = TonWeb.utils.bytesToString(tx.payload);
       }
 
+      console.log('Message:', tx.message);
+      console.log('Payload:', TonWeb.utils.bytesToString(tx.payload));
+      
+      // 检查 message 或 payload 中是否包含 orderId
       return message.includes(orderId) || payload.includes(orderId);
     });
 
-    filteredTransactions.sort((a, b) => b.utime - a.utime);
+    // 打印过滤后的交易记录（调试用）
+    console.log('过滤后的交易记录:', filteredTransactions);
 
+    // 按时间戳排序，越近的排前面
+    filteredTransactions.sort((a, b) => b.time - a.time);
+
+    // 提取所需的信息：哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => ({
-      hash: tx.transaction_id.hash,
-      amount: TonWeb.utils.fromNano(tx.in_msg.value || '0'),
-      time: new Date(tx.utime * 1000),
+      hash: tx.hash,  // 交易哈希
+      amount: TonWeb.utils.fromNano(tx.amount),  // 转账金额，转换为 TON
+      time: new Date(tx.time * 1000),  // 转账时间（转换为日期格式）
     }));
 
+    // 返回交易详细信息
     return transactionDetails;
   } catch (err) {
     console.error('获取交易记录失败:', err);

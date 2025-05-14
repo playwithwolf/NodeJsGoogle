@@ -357,25 +357,29 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 
     // 过滤包含 orderId 的交易
     const filteredTransactions = transactions.filter(tx => {
-      const inMsg = tx.in_msg || {};
-      const message = inMsg.message || '';
-      const payloadBytes = inMsg.payload_bytes;
+      const inMsg = tx.in_msg;
+      if (!inMsg || !inMsg.value || inMsg.value === '0') return false;
 
-      // 将 payload 字节流转换为字符串
+      // 解析 payload 中的字符串
       let payload = '';
-      if (payloadBytes) {
-        try {
-          payload = decodePayloadBase64(payload_bytes);
-        } catch (e) {
-          console.log("解码失败 e = "+e)
-          payload = '';  // 如果解码失败，设置为空字符串
-        }
+      try {
+        const base64Body = inMsg.msg_data?.body || '';
+        payload = parsePayloadFromBodyBase64(base64Body);  // 使用上面的函数
+      } catch (e) {
+        payload = '';
       }
 
-      console.log('Message:', tx.message);
-      console.log('Payload:', payload);
+      // message 解码（有时是 base64，有时是明文）
+      let message = '';
+      try {
+        message = Buffer.from(inMsg.message || '', 'base64').toString('utf-8');
+      } catch {
+        message = inMsg.message || '';
+      }
 
-      // 检查 message 或 payload 是否包含 orderId
+      console.log('✔️ 解码后的 Message:', message);
+      console.log('✔️ 解码后的 Payload:', payload);
+
       return message.includes(orderId) || payload.includes(orderId);
     });
 

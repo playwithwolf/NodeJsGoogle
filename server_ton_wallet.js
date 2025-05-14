@@ -287,7 +287,7 @@ async function sentClientTonHaveOrderId(client_wallet, amountTON, orderId) {
 
      
   } catch (err) {
-    console.error('['+clientAddressStr+'] 转账失败:', err);
+    console.error('转账失败:', err);
     throw new Error('服务器钱包转账失败: ' + err.message);
   }
 }

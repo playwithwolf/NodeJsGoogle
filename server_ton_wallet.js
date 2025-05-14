@@ -342,4 +342,5 @@ module.exports = {
   deploy,
   checkBalanceDebug,
   sendTonHaveOrderId,
+  sentClientTonHaveOrderId,
 };

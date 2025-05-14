@@ -327,47 +327,57 @@ async function checkBalanceDebug() {
 }
 
 
-// 获取与订单 ID 相关的所有交易记录
-async function getTransactionsForOrderId(serverAddress, orderId) {
+async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
   try {
-    // 获取交易历史记录
-    const transactions = await tonweb.provider.getTransactionHistory(serverAddress);
-    
-    // 打印获取到的交易记录（调试用）
-    console.log('所有交易记录:', transactions);
-    
+    // 构建 API 请求 URL
+    const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
+
+    // 打印 URL，方便调试
+    console.log('请求 URL:', url);
+
+    // 发送请求并等待响应
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // 如果请求失败，抛出错误
+    if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
+
+    // 提取交易记录
+    const transactions = data.result;
+
     // 过滤包含 orderId 的交易
     const filteredTransactions = transactions.filter(tx => {
-      // 获取消息或有效负载
-      const message = tx.message || '';
+      const inMsg = tx.in_msg || {};
+      const message = inMsg.message || '';
+      const payloadBytes = inMsg.payload_bytes;
+
+      // 将 payload 字节流转换为字符串
       let payload = '';
-      
-      // 如果 payload 存在，则将其字节流解码为字符串
-      if (tx.payload) {
-        payload = TonWeb.utils.bytesToString(tx.payload);
+      if (payloadBytes) {
+        try {
+          payload = TonWeb.utils.bytesToString(Buffer.from(payloadBytes, 'base64'));
+        } catch (e) {
+          payload = '';  // 如果解码失败，设置为空字符串
+        }
       }
 
       console.log('Message:', tx.message);
       console.log('Payload:', TonWeb.utils.bytesToString(tx.payload));
-      
-      // 检查 message 或 payload 中是否包含 orderId
+
+      // 检查 message 或 payload 是否包含 orderId
       return message.includes(orderId) || payload.includes(orderId);
     });
 
-    // 打印过滤后的交易记录（调试用）
-    console.log('过滤后的交易记录:', filteredTransactions);
+    // 按时间戳排序（时间越近越前）
+    filteredTransactions.sort((a, b) => b.utime - a.utime);
 
-    // 按时间戳排序，越近的排前面
-    filteredTransactions.sort((a, b) => b.time - a.time);
-
-    // 提取所需的信息：哈希、金额和时间
+    // 提取交易哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => ({
-      hash: tx.hash,  // 交易哈希
-      amount: TonWeb.utils.fromNano(tx.amount),  // 转账金额，转换为 TON
-      time: new Date(tx.time * 1000),  // 转账时间（转换为日期格式）
+      hash: tx.transaction_id.hash,  // 交易哈希
+      amount: TonWeb.utils.fromNano(tx.in_msg.value || '0'),  // 转账金额，转换为 TON
+      time: new Date(tx.utime * 1000),  // 转账时间（转换为日期格式）
     }));
 
-    // 返回交易详细信息
     return transactionDetails;
   } catch (err) {
     console.error('获取交易记录失败:', err);

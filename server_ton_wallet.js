@@ -408,6 +408,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 
     // 提取交易哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => {
+       console.log("tx = " +tx)
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
       console.log("data = " +data)

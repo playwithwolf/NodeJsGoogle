@@ -397,8 +397,8 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
         message = inMsg.message || '';
       }
 
-      console.log('✔️ 解码后的 Message:', message);
-      console.log('✔️ 解码后的 Payload:', payload);
+      // console.log('✔️ 解码后的 Message:', message);
+      // console.log('✔️ 解码后的 Payload:', payload);
 
       return message.includes(orderId) || payload.includes(orderId);
     });
@@ -408,7 +408,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 
     // 提取交易哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => {
-       console.log("tx = " +tx)
+       console.log("tx = " +JSON.stringify(tx))
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
       console.log("data = " +data)

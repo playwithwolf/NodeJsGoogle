@@ -352,7 +352,14 @@ function getRealTxHashFromDataBase64(base64Data) {
     console.log('解码后的数据（Buffer）:', dataBuffer.toString('hex')); // 打印解码后的数据，检查是否正确
 
     // 2. 使用 TonWeb 解析 BOC 数据
+
+    console.log('TonWeb:', TonWeb);
+    console.log('TonWeb.boc:', TonWeb.boc);
+    console.log('TonWeb.boc.Cell:', TonWeb.boc.Cell);
+    console.log('TonWeb.boc.Cell.oneFromBoc:', TonWeb.boc.Cell.oneFromBoc);
+
     const cell = TonWeb.boc.Cell.oneFromBoc(dataBuffer);
+    console.log('cell = ', cell);
     if (!cell || cell.length === 0) {
       console.warn('⚠️ BOC 数据解析失败');
       return '';

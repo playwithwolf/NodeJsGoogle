@@ -347,30 +347,23 @@ function decodePayloadBase64(base64Str) {
 
 function getRealTxHashFromDataBase64(base64Data) {
   try {
-    // 1. 解码 Base64 数据
     const dataBuffer = Buffer.from(base64Data, 'base64');
-    console.log('解码后的数据（Buffer）:', dataBuffer.toString('hex')); // 打印解码后的数据，检查是否正确
+    console.log('解码后的数据（Buffer）:', dataBuffer.toString('hex'));
 
-    // 2. 使用 TonWeb 解析 BOC 数据
-
-    const cell = TonWeb.boc.Cell.oneFromBoc(dataBuffer);
-    console.log('cell = ', cell);
-    if (!cell || cell.length === 0) {
+    const cells = TonWeb.boc.Cell.fromBoc(dataBuffer);
+    if (!cells || cells.length === 0) {
       console.warn('⚠️ BOC 数据解析失败');
       return '';
     }
 
-    console.log('cell[0] = '+cell[0]);
-    // 3. 获取 BOC 的字节表示
-    const bocBytes = cell[0].toBoc();
-    console.log('BOC 字节数据:', bocBytes.toString('hex')); // 打印 BOC 字节数据
+    const rootCell = cells[0];
+    const bocBytes = rootCell.toBoc();
+    console.log('BOC 字节数据:', bocBytes.toString('hex'));
 
-    // 4. 计算 SHA256 哈希
     const hashBuffer = crypto.createHash('sha256').update(bocBytes).digest();
     const hashHex = hashBuffer.toString('hex');
-    console.log('计算出的真实交易哈希:', hashHex); // 打印计算出的哈希值
+    console.log('计算出的真实交易哈希:', hashHex);
 
-    // 5. 返回哈希值
     return hashHex;
   } catch (e) {
     console.warn('⚠️ 解析真实交易哈希失败:', e);

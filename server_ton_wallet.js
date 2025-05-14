@@ -362,7 +362,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       }
 
       console.log('Message:', tx.message);
-      console.log('Payload:', TonWeb.utils.bytesToString(tx.payload));
+      console.log('Payload:', payload);
 
       // 检查 message 或 payload 是否包含 orderId
       return message.includes(orderId) || payload.includes(orderId);

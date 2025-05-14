@@ -331,6 +331,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
   try {
     const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
 
+    console.log(url);
     const response = await fetch(url);
     const data = await response.json();
 

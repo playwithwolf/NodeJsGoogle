@@ -346,10 +346,29 @@ function decodePayloadBase64(base64Str) {
 // }
 
 function getRealTxHashFromDataBase64(base64Data) {
+  // try {
+  //   const cell = TonWeb.boc.Cell.oneFromBoc(Buffer.from(base64Data, 'base64'))[0];
+  //   const bocBytes = cell.toBoc();
+  //   const hashBuffer = require('crypto').createHash('sha256').update(bocBytes).digest();
+  //   return hashBuffer.toString('hex');
+  // } catch (e) {
+  //   console.warn('⚠️ 解析真实交易哈希失败:', e.message);
+  //   return '';
+  // }
   try {
-    const cell = TonWeb.boc.Cell.oneFromBoc(Buffer.from(base64Data, 'base64'))[0];
+    // 从 Base64 解码数据
+    const data = Buffer.from(base64Data, 'base64');
+
+    // 使用 TonWeb 解析 BOC 数据
+    const cell = TonWeb.boc.Cell.oneFromBoc(data)[0];
+
+    // 获取 BOC 的字节表示
     const bocBytes = cell.toBoc();
-    const hashBuffer = require('crypto').createHash('sha256').update(bocBytes).digest();
+
+    // 计算 SHA256 哈希
+    const hashBuffer = crypto.createHash('sha256').update(bocBytes).digest();
+
+    // 返回哈希值
     return hashBuffer.toString('hex');
   } catch (e) {
     console.warn('⚠️ 解析真实交易哈希失败:', e.message);

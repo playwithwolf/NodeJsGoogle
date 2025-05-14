@@ -353,11 +353,6 @@ function getRealTxHashFromDataBase64(base64Data) {
 
     // 2. 使用 TonWeb 解析 BOC 数据
 
-    // console.log('TonWeb:', TonWeb);
-    // console.log('TonWeb.boc:', TonWeb.boc);
-    // console.log('TonWeb.boc.Cell:', TonWeb.boc.Cell);
-    // console.log('TonWeb.boc.Cell.oneFromBoc:', TonWeb.boc.Cell.oneFromBoc);
-
     const cell = TonWeb.boc.Cell.oneFromBoc(dataBuffer);
     console.log('cell = ', cell);
     if (!cell || cell.length === 0) {
@@ -378,7 +373,7 @@ function getRealTxHashFromDataBase64(base64Data) {
     // 5. 返回哈希值
     return hashHex;
   } catch (e) {
-    console.warn('⚠️ 解析真实交易哈希失败:', e.message);
+    console.warn('⚠️ 解析真实交易哈希失败:', e);
     return '';
   }
 }

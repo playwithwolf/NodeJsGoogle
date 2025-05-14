@@ -346,30 +346,29 @@ function decodePayloadBase64(base64Str) {
 // }
 
 function getRealTxHashFromDataBase64(base64Data) {
-  // try {
-  //   const cell = TonWeb.boc.Cell.oneFromBoc(Buffer.from(base64Data, 'base64'))[0];
-  //   const bocBytes = cell.toBoc();
-  //   const hashBuffer = require('crypto').createHash('sha256').update(bocBytes).digest();
-  //   return hashBuffer.toString('hex');
-  // } catch (e) {
-  //   console.warn('⚠️ 解析真实交易哈希失败:', e.message);
-  //   return '';
-  // }
   try {
-    // 从 Base64 解码数据
-    const data = Buffer.from(base64Data, 'base64');
+    // 1. 解码 Base64 数据
+    const dataBuffer = Buffer.from(base64Data, 'base64');
+    console.log('解码后的数据（Buffer）:', dataBuffer.toString('hex')); // 打印解码后的数据，检查是否正确
 
-    // 使用 TonWeb 解析 BOC 数据
-    const cell = TonWeb.boc.Cell.oneFromBoc(data)[0];
+    // 2. 使用 TonWeb 解析 BOC 数据
+    const cell = TonWeb.boc.Cell.oneFromBoc(dataBuffer);
+    if (!cell || cell.length === 0) {
+      console.warn('⚠️ BOC 数据解析失败');
+      return '';
+    }
 
-    // 获取 BOC 的字节表示
-    const bocBytes = cell.toBoc();
+    // 3. 获取 BOC 的字节表示
+    const bocBytes = cell[0].toBoc();
+    console.log('BOC 字节数据:', bocBytes.toString('hex')); // 打印 BOC 字节数据
 
-    // 计算 SHA256 哈希
+    // 4. 计算 SHA256 哈希
     const hashBuffer = crypto.createHash('sha256').update(bocBytes).digest();
+    const hashHex = hashBuffer.toString('hex');
+    console.log('计算出的真实交易哈希:', hashHex); // 打印计算出的哈希值
 
-    // 返回哈希值
-    return hashBuffer.toString('hex');
+    // 5. 返回哈希值
+    return hashHex;
   } catch (e) {
     console.warn('⚠️ 解析真实交易哈希失败:', e.message);
     return '';

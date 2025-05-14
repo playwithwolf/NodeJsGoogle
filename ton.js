@@ -194,8 +194,12 @@ try {
      const useraddress = await userWallet.getAddress();
      console.log(`4`);
      const toAddressStr = new TonWeb.utils.Address(useraddress).toString(true, true, false);
+     //获得目标钱包初始余额
+     const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
+     const initBalanceNano = BigInt(initInfo.balance || 0n);
 
-     // 获取服务器钱包当前余额
+
+     // 获取服务器钱包
     const server_address = await getAddress();
     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 

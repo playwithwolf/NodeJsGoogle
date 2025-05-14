@@ -355,7 +355,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       let payload = '';
       if (payloadBytes) {
         try {
-          payload = TonWeb.utils.bytesToString(Buffer.from(payloadBytes, 'base64'));
+          payload = Buffer.from(payloadBytes, 'base64').toString('utf-8');
         } catch (e) {
           payload = '';  // 如果解码失败，设置为空字符串
         }

@@ -410,6 +410,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
     const transactionDetails = filteredTransactions.map(tx => {
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
+      console.log("data = " +data)
       return {
         hash: tx.transaction_id.hash,
         realHash: getRealTxHashFromDataBase64(data),

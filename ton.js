@@ -186,17 +186,21 @@ try {
     const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
     console.log(`2`);
     const WalletClass = tonweb.wallet.all.v3R2;
-    const wallet = new WalletClass(tonweb.provider, {
+    const userWallet = new WalletClass(tonweb.provider, {
       publicKey: keyPair.publicKey,
       wc: 0,
     });
      console.log(`3`);
-     const address = await wallet.getAddress();
+     const useraddress = await userWallet.getAddress();
      console.log(`4`);
-     const toAddressStr = new TonWeb.utils.Address(address).toString(true, true, false);
+     const toAddressStr = new TonWeb.utils.Address(useraddress).toString(true, true, false);
 
      // 获取服务器钱包当前余额
-     const info = await tonweb.provider.getAddressInfo(toAddressStr);
+    const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+    // 获取服务器初始余额
+     const info = await tonweb.provider.getAddressInfo(server_addressStr);
      const serverBalanceNano = BigInt(info.balance || 0n);
 
      const transferAmountNano = BigInt(TonWeb.utils.toNano(amountTON.toString()));
@@ -220,7 +224,7 @@ try {
      }
 
 
-    await sendTonHaveOrderId(address, amountTON,orderId);
+    await sendTonHaveOrderId(useraddress, amountTON,orderId);
     console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
 
     await delay(1000);

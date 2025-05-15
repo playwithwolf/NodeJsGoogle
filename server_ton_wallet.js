@@ -558,11 +558,12 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     const inMsg = transactions[0].in_msg;
     const inValueNano = inMsg?.value; // 例如：'200000000'
     console.log("inValueNano = "+inValueNano)
-
+    console.log("utime = "+utime)
+    console.log("time = "+time)
     const istimeok = isUtimeCloseToTarget(utime,time);
     console.log("istimeok = "+istimeok)
     const isamountok = isAmountMatch(amount, inValueNano);
-    console.log("istimeok = "+istimeok)
+    console.log("isamountok = "+isamountok)
     
     return {   
             amount: TonWeb.utils.fromNano(String(inValueNano)),
@@ -590,9 +591,14 @@ function isUtimeCloseToTarget(utime, targetTimeStr, toleranceSeconds = 60) {
       return `${y}-${m.padStart?.(2, '0') || ('0' + m).slice(-2)}-${d.padStart?.(2, '0') || ('0' + d).slice(-2)}`;
     })                                          // 补齐月份和日期的前导零
     .replace(' ', 'T');                         // 替换空格为 T，使其更像 ISO
-
+  console.log(" isoTimeStr = "+isoTimeStr)
   const targetTime = new Date(isoTimeStr);
+  console.log(" targetTime = "+targetTime)
   const targetTs = Math.floor(targetTime.getTime() / 1000);
+  console.log(" targetTs = "+targetTs)
+
+  console.log(" abs = "+Math.abs(utime - targetTs))
+  
   return Math.abs(utime - targetTs) <= toleranceSeconds;
 }
 

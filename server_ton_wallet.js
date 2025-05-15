@@ -556,7 +556,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     
     const iscurrectTime = isUtimeCloseToTarget(utime,time)
     const inMsg = transactions[0].in_msg;
-    const inValueNano = Number(inMsg?.value || 0); // 例如：'200000000'
+    const inValueNano = inMsg?.value; // 例如：'200000000'
     console.log("inValueNano = "+inValueNano)
 
     const istimeok = isUtimeCloseToTarget(utime,time);

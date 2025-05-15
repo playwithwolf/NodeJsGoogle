@@ -361,12 +361,13 @@ function getRealTxHashFromDataBase64(base64Data) {
 
 async function getFullTransactionData(txHash) {
   const url = `${process.env.TESTNET_TON_TRAN}?hash=${txHash}&api_key=${process.env.TESTNET_API_KEY}`;
+  console.log(url)
   try {
     const response = await fetch(url);
     const data = await response.json();
-
+    console.log(data)
     if (!data.ok) {
-      throw new Error(`Error from TonCenter API: ${data.error.message}`);
+      throw new Error(`Error from TonCenter API: ${data}`);
     }
 
     return data.result; // 返回完整交易数据对象

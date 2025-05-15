@@ -590,7 +590,7 @@ function isUtimeCloseToTarget(utime, targetTimeStr, timezoneOffset, toleranceSec
     .replace(/(\d{4})-(\d{1,2})-(\d{1,2})/, (_, y, m, d) => {
       return `${y}-${m.padStart?.(2, '0') || ('0' + m).slice(-2)}-${d.padStart?.(2, '0') || ('0' + d).slice(-2)}`;
     })
-    .replace(' ', 'T') + timezoneOffsetStr;
+    .replace(' ', 'T') + timezoneOffset;
                          // 替换空格为 T，使其更像 ISO
   console.log(" isoTimeStr = "+isoTimeStr)
   const targetTime = new Date(isoTimeStr);

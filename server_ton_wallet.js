@@ -360,7 +360,7 @@ function getRealTxHashFromDataBase64(base64Data) {
 }
 
 async function getFullTransactionData(txHash, address, lt) {
-  const rpcUrl = process.env.TESTNET_TON_API2; // e.g. https://testnet.toncenter.com/api/v2/jsonRPC
+  const rpcUrl = process.env.TESTNET_TON_API; // e.g. https://testnet.toncenter.com/api/v2/jsonRPC
   const apiKey = process.env.TESTNET_API_KEY;  // 如果需要的话
   const toLt = (BigInt(lt) + 1n).toString();
   // 构造 JSON-RPC 请求体

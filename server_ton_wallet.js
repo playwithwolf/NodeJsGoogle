@@ -408,10 +408,23 @@ async function getFullTransactionData(txHash, address, lt) {
       hasInMsgBoc: !!(tx.in_msg && tx.in_msg.boc),
     });
     const bocPayload = tx.in_msg?.msg_data?.body;
-    const cell2 = TonWeb.boc.Cell.oneFromBoc(bocPayload);
-    const slice2 = cell2.beginParse();
-    const decodedString2 = slice2.readString();
-    console.log("Payload:", decodedString2);
+    // 把 Base64 转成 Buffer
+    const buffer = Buffer.from(bocPayload, 'base64');
+
+    // 然后从 Buffer 创建 Cell
+    const cells = Cell.fromBoc(buffer);
+
+    // 一般第一个 cell 就是需要解析的
+    const cell = cells[0];
+
+    // 开始解析
+    const slice = cell.beginParse();
+
+    // 根据具体数据结构用 slice 读取，比如试试读字符串
+    const str = slice.readString();
+
+    // 打印结果
+    console.log("Parsed string:", str);
     return tx;
   } catch (err) {
     console.error('❌ Failed to fetch transaction:', err.message);

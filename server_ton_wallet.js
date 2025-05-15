@@ -412,7 +412,7 @@ async function getFullTransactionData(txHash, address, lt) {
     const buffer = Buffer.from(bocPayload, 'base64');
 
     // 然后从 Buffer 创建 Cell
-    const cells = Cell.fromBoc(buffer);
+    const cells = TonWeb.boc.Cell.fromBoc(buffer);
 
     // 一般第一个 cell 就是需要解析的
     const cell = cells[0];

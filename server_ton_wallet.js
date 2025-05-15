@@ -373,7 +373,7 @@ async function getFullTransactionData(address,hash) {
 
     // 如果请求失败，抛出错误
     if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
-    / 提取交易记录
+    // 提取交易记录
     const transactions = data.result;
     hash = transactions[0].transaction_id.hash;
     console.log("hash = "+hash)

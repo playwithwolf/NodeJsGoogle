@@ -10,7 +10,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
   }));
 
-const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsForOrderId } =  require('./server_ton_wallet');
+const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId } =  require('./server_ton_wallet');
 const WalletClass = tonweb.wallet.all.v3R2;
 
 
@@ -386,7 +386,7 @@ router.post('/sendTonToServer', async (req, res) => {
   }
 });
 
-router.post('/getTransactionsForOrderId', async (req, res) => {
+router.post('/getTransactionsInOrderId', async (req, res) => {
   try {
     const { orderId } = req.body;
 
@@ -401,7 +401,37 @@ router.post('/getTransactionsForOrderId', async (req, res) => {
     const server_address = await getAddress();
     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 
-    const transactions = await getTransactionsForOrderId(server_addressStr, orderId);
+    const transactions = await getTransactionsInOrderId(server_addressStr, orderId);
+
+    return res.status(200).json({
+      success: true,
+      transactions
+    });
+  } catch (error) {
+    console.error('[getTransactionsForOrderId] 发生错误:', error);
+    return res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
+router.post('/getTransactionsOutOrderId', async (req, res) => {
+  try {
+    const { orderId } = req.body;
+
+
+    if (!orderId) {
+      return res.status(400).json({
+        error: 'orderId不能为空',
+        success: false
+      });
+    }
+
+    const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+    const transactions = await getTransactionsOutOrderId(server_addressStr, orderId);
 
     return res.status(200).json({
       success: true,

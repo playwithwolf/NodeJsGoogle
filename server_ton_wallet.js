@@ -339,11 +339,7 @@ function decodePayloadBase64(base64Str) {
   }
 }
 
-// function base64ToReversedHex(base64Hash) {
-//   const buffer = Buffer.from(base64Hash, 'base64');
-//   const reversed = Buffer.from(buffer).reverse();  // 反转字节顺序
-//   return reversed.toString('hex');
-// }
+ 
 
 function getRealTxHashFromDataBase64(base64Data) {
   try {
@@ -385,7 +381,7 @@ async function getFullTransactionData(address,hash) {
   }
 }
 
-async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
+async function getTransactionsInOrderId(serverAddress, orderId, limit = 20) {
   try {
     // 构建 API 请求 URL
     const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
@@ -433,37 +429,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 
     // 按时间戳排序（时间越近越前）
     filteredTransactions.sort((a, b) => b.utime - a.utime);
-
-    // 提取交易哈希、金额和时间
-    // const transactionDetails = filteredTransactions.map(tx => {
-      
-    //   const inMsg = tx.in_msg || {};
-    //   const data = inMsg.msg_data ? inMsg.msg_data.body : '';
-    //   const realHash = getRealTxHashFromDataBase64(tx.data)
-    //   console.log("realHash = " +realHash)
-    //   const sourcehash = await getFullTransactionData(tx.address.account_address,realHash)
-
-    //   console.log("sourcehash = " +sourcehash)
-
-    //   // Buffer.from 可以把 Base64 字符串转换成字节数组
-    //   const buf = Buffer.from(sourcehash, 'base64');
-      
-    //   // 转成 hex 字符串
-    //   const traceIdHex = buf.toString('hex');
-     
-    //   console.log("traceIdHex = " +traceIdHex)
-
-    //   return {
-    //     hash: tx.transaction_id.hash,
-    //     realHash: realHash,
-    //     sourcehash: sourcehash,
-    //     traceIdHex: traceIdHex,
-    //     amount: TonWeb.utils.fromNano(inMsg.value || '0'),
-    //     time: new Date(tx.utime * 1000),
-    //     from: inMsg.source || 'external',
-    //     to: inMsg.destination || serverAddress,
-    //   };
-    // });
+ 
     const transactionDetails = await Promise.all(filteredTransactions.map(async (tx) => {
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
@@ -479,7 +445,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 
       return {
         hash: tx.transaction_id.hash,
-        realHash: realHash,
+        realHex: realHash,
         sourcehash: sourcehash,
         traceIdHex: traceIdHex,
         amount: TonWeb.utils.fromNano(inMsg.value || '0'),
@@ -497,6 +463,110 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 }
 
 
+
+async function getTransactionsOutOrderId(serverAddress, orderId, limit = 20) {
+  try {
+    const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
+    console.log('请求 URL:', url);
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
+
+    const transactions = data.result;
+
+    const filteredTransactions = [];
+
+    for (const tx of transactions) {
+      if (!tx.out_msgs || tx.out_msgs.length === 0) continue;
+
+      // 先拿 realHex，从交易整体 data 解析
+      const realHash = getRealTxHashFromDataBase64(tx.data);
+
+      for (const outMsg of tx.out_msgs) {
+        if (!outMsg.value || outMsg.value === '0') continue;
+
+        let payload = '';
+        try {
+          const base64Body = outMsg.msg_data?.body || '';
+          payload = parsePayloadFromBodyBase64(base64Body);
+        } catch {
+          payload = '';
+        }
+
+        let message = '';
+        try {
+          message = Buffer.from(outMsg.message || '', 'base64').toString('utf-8');
+        } catch {
+          message = outMsg.message || '';
+        }
+
+        if (message.includes(orderId) || payload.includes(orderId)) {
+          filteredTransactions.push({
+            hash: tx.transaction_id.hash,
+            realHex: realHash,
+            amount: TonWeb.utils.fromNano(outMsg.value || '0'),
+            time: new Date(tx.utime * 1000),
+            from: outMsg.source || serverAddress,
+            to: outMsg.destination || 'external',
+          });
+        }
+      }
+    }
+
+    filteredTransactions.sort((a, b) => b.time - a.time);
+
+    return filteredTransactions;
+  } catch (err) {
+    console.error('获取出站交易记录失败:', err);
+    throw new Error('获取出站交易记录失败: ' + err.message);
+  }
+}
+
+
+
+/**
+ * 判断交易的 utime 是否与目标时间相差不超过指定秒数
+ * @param {number} utime 交易时间戳，单位秒
+ * @param {string} targetTimeStr 目标时间字符串，格式 "YYYY/MM/DD HH:mm:ss"
+ * @param {number} toleranceSeconds 允许误差秒数，默认60秒
+ * @returns {boolean} 是否在误差范围内
+ */
+function isUtimeCloseToTarget(utime, targetTimeStr, toleranceSeconds = 60) {
+  const targetTime = new Date(targetTimeStr.replace(/\//g, '-'));
+  const targetTs = Math.floor(targetTime.getTime() / 1000);
+  return Math.abs(utime - targetTs) <= toleranceSeconds;
+}
+
+
+// async function getFullTransactionData(address,hash) {
+  
+//  const url = `${process.env.TESTNET_TON_TRAN}?address=${address}&limit=1&api_key=${process.env.TESTNET_API_KEY}&hash=${hash}`;
+//   try {
+
+//     // 打印 URL，方便调试
+//     console.log('请求 URL:', url);
+
+//     // 发送请求并等待响应
+//     const response = await fetch(url);
+//     const data = await response.json();
+
+//     // 如果请求失败，抛出错误
+//     if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
+//     // 提取交易记录
+//     const transactions = data.result;
+//     hash = transactions[0].transaction_id.hash;
+//     console.log("hash = "+hash)
+    
+//     return hash;
+//   } catch (err) {
+//     console.error('❌ Failed to fetch transaction:', err.message);
+//     return "";
+//   }
+// }
+
+
 module.exports = {
   init,
   getAddress,
@@ -507,5 +577,6 @@ module.exports = {
   checkBalanceDebug,
   sendTonHaveOrderId,
   sentClientTonHaveOrderId,
-  getTransactionsForOrderId,
+  getTransactionsInOrderId,
+  getTransactionsOutOrderId,
 };

@@ -585,7 +585,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time,tim
  */
 function isUtimeCloseToTarget(utime, targetTimeStr, timezoneOffset, toleranceSeconds = 60) {
   // 兼容 "2025/5/14 19:38:49" -> "2025-05-14T19:38:49"
- const isoStr = datetimeStr
+ const isoStr = targetTimeStr
     .replace(/\//g, '-') // 替换 / 为 -
     .replace(/(\d{4})-(\d{1,2})-(\d{1,2})/, (_, y, m, d) => {
       return `${y}-${m.padStart?.(2, '0') || ('0' + m).slice(-2)}-${d.padStart?.(2, '0') || ('0' + d).slice(-2)}`;

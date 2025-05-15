@@ -359,20 +359,57 @@ function getRealTxHashFromDataBase64(base64Data) {
   }
 }
 
-async function getFullTransactionData(txHash,address,lt) {
-  const url = `${process.env.TESTNET_TON_TRAN}?address=${address}&limit=1&lt=${lt}&hash=${txHash}&api_key=${process.env.TESTNET_API_KEY}`;
-  console.log(url)
-  try {
-    const response = await fetch(url);
-    const data = await response.json();
-    console.log(data)
-    if (!data.ok) {
-      throw new Error(`Error from TonCenter API: ${data}`);
-    }
+async function getFullTransactionData(txHash, address, lt) {
+  const rpcUrl = process.env.TESTNET_TON_TRAN; // e.g. https://testnet.toncenter.com/api/v2/jsonRPC
+  const apiKey = process.env.TESTNET_API_KEY;  // 如果需要的话
 
-    return data.result; // 返回完整交易数据对象
+  // 构造 JSON-RPC 请求体
+  const body = {
+    jsonrpc: '2.0',
+    id: 1,
+    method: 'getTransactions',
+    params: {
+      address,
+      limit: 1,
+      to_lt: lt,
+      archival: true
+    }
+  };
+
+  const url = apiKey ? `${rpcUrl}?api_key=${apiKey}` : rpcUrl;
+  console.log('→ JSON-RPC URL:', url);
+  console.log('→ Request body:', JSON.stringify(body));
+
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const json = await res.json();
+    if (json.error) {
+      throw new Error(`RPC Error ${json.error.code}: ${json.error.message}`);
+    }
+    const txList = Array.isArray(json.result) ? json.result : [];
+    if (txList.length === 0) {
+      console.warn('⚠️ 没有拿到任何交易，请检查 address/lt 是否正确');
+      return null;
+    }
+    // 找到 hash 匹配的那笔
+    const tx = txList.find(t => {
+      const h = t.transaction_id?.hash;
+      return h && (h.replace(/^0x/, '') === txHash.replace(/^0x/, ''));
+    }) ?? txList[0];
+    console.log('← Fetched tx:', {
+      lt: tx.transaction_id.lt,
+      hash: tx.transaction_id.hash,
+      hasData: !!tx.data,
+      hasInMsgBoc: !!(tx.in_msg && tx.in_msg.boc),
+    });
+    return tx;
   } catch (err) {
-    console.error('Failed to fetch transaction:', err);
+    console.error('❌ Failed to fetch transaction:', err.message);
+    return null;
   }
 }
 

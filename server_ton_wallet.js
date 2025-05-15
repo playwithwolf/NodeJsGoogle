@@ -5,8 +5,8 @@ const tonMnemonic = require('tonweb-mnemonic');
 const { v4: uuidv4 } = require('uuid');
 const fetch = require('node-fetch');
 const crypto = require('crypto');
-const { Cell } = TonWeb.boc;
-
+const { Cell: TonWebCel } = TonWeb.boc;
+const { Cell: CoreCell } = require('ton-core');
 
 const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
@@ -347,7 +347,7 @@ function decodePayloadBase64(base64Str) {
 
 function getRealTxHashFromDataBase64(base64Data) {
   try {
-    const rootCell = Cell.fromBase64(base64Boc); // 直接就是 Cell 对象，不是数组
+    const rootCell = CoreCell.fromBase64(base64Boc); // 直接就是 Cell 对象，不是数组
     const hash = rootCell.hash(); // 计算哈希
     const hashHex = Buffer.from(hash).toString('hex');
     console.log('计算出的真实交易哈希:', hashHex);

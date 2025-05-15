@@ -524,6 +524,60 @@ async function getTransactionsOutOrderId(serverAddress, orderId, limit = 20) {
   }
 }
 
+function isAmountMatch(userInputStr, chainValueNanoTON, tolerance = 1e-9) {
+  const chainAmount = Number(chainValueNanoTON) / 1e9; // 转为 TON
+  const userAmount = parseFloat(userInputStr);         // 转为浮点数
+
+  return Math.abs(chainAmount - userAmount) <= tolerance;
+}
+
+async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
+  try {
+    // 构建 API 请求 URL
+    const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=1&api_key=${process.env.TESTNET_API_KEY}&hash=${client_hash}`;
+
+    // 打印 URL，方便调试
+    console.log('请求 URL:', url);
+
+    // 发送请求并等待响应
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // 如果请求失败，抛出错误
+    if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
+
+    // 提取交易记录
+    const transactions = data.result;
+    const utime = transactions[0].utime;
+    console.log("hash = "+hash)
+    const iscurrectTime = isUtimeCloseToTarget(utime,time)
+    const inMsg = transactions[0].in_msg;
+    const inValueNano = Number(inMsg?.value || 0); // 例如：'200000000'
+    const istimeok
+    if(isUtimeCloseToTarget(utime,time)){
+       istimeok = true;
+    }else{
+       istimeok = false;
+    }
+    const isamountok
+    if (isAmountMatch(amount, inValueNano)) {
+      isamountok = true;
+    } else {
+      isamountok = false;
+    }
+
+ 
+
+    
+    return {   
+            amount: TonWeb.utils.fromNano(inValueNano || '0'),
+            isOK: istimeok && isamountok
+          };
+  } catch (err) {
+    console.error('获取交易记录失败:', err);
+    throw new Error('获取交易记录失败: ' + err.message);
+  }
+}
 
 
 /**
@@ -579,4 +633,5 @@ module.exports = {
   sentClientTonHaveOrderId,
   getTransactionsInOrderId,
   getTransactionsOutOrderId,
+  getTransactionsInHash,
 };

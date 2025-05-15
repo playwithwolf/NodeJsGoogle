@@ -10,7 +10,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
   }));
 
-const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId } =  require('./server_ton_wallet');
+const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash } =  require('./server_ton_wallet');
 const WalletClass = tonweb.wallet.all.v3R2;
 
 
@@ -432,6 +432,38 @@ router.post('/getTransactionsOutOrderId', async (req, res) => {
     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 
     const transactions = await getTransactionsOutOrderId(server_addressStr, orderId);
+
+    return res.status(200).json({
+      success: true,
+      transactions
+    });
+  } catch (error) {
+    console.error('[getTransactionsForOrderId] 发生错误:', error);
+    return res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
+
+router.post('/getTransactionsInHash', async (req, res) => {
+  try {
+    const { hash , amount, time } = req.body;
+
+
+    if (!hash || !amount || !time) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, mnemonics, amountTON
+      });
+    }
+
+    const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+    const transactions = await getTransactionsInHash(server_addressStr, amount,hash,time );
 
     return res.status(200).json({
       success: true,

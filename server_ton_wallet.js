@@ -549,7 +549,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     // 提取交易记录
     const transactions = data.result;
     const utime = transactions[0].utime;
-    console.log("hash = "+hash)
+    console.log("hash = "+client_hash)
     const iscurrectTime = isUtimeCloseToTarget(utime,time)
     const inMsg = transactions[0].in_msg;
     const inValueNano = Number(inMsg?.value || 0); // 例如：'200000000'

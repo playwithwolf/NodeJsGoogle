@@ -542,7 +542,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     // 发送请求并等待响应
     const response = await fetch(url);
     const data = await response.json();
-    console.log("data = "+data)
+    console.log(JSON.stringify(data))
 
     // 如果请求失败，抛出错误
     if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
@@ -561,7 +561,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
      
     
     return {   
-            amount: TonWeb.utils.fromNano(inValueNano || '0'),
+            amount: TonWeb.utils.fromNano(String(inValueNano)),
             isOK: istimeok && isamountok
           };
   } catch (err) {

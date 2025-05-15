@@ -557,8 +557,9 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     console.log("inValueNano = "+inValueNano)
 
     const istimeok = isUtimeCloseToTarget(utime,time);
+    console.log("istimeok = "+istimeok)
     const isamountok = isAmountMatch(amount, inValueNano);
-     
+    console.log("istimeok = "+istimeok)
     
     return {   
             amount: TonWeb.utils.fromNano(String(inValueNano)),

@@ -553,21 +553,10 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     const iscurrectTime = isUtimeCloseToTarget(utime,time)
     const inMsg = transactions[0].in_msg;
     const inValueNano = Number(inMsg?.value || 0); // 例如：'200000000'
-    const istimeok = false;
-    if(isUtimeCloseToTarget(utime,time)){
-       istimeok = true;
-    }else{
-       istimeok = false;
-    }
-    const isamountok = false;
-    if (isAmountMatch(amount, inValueNano)) {
-      isamountok = true;
-    } else {
-      isamountok = false;
-    }
 
- 
-
+    const istimeok = isUtimeCloseToTarget(utime,time);
+    const isamountok = isAmountMatch(amount, inValueNano);
+     
     
     return {   
             amount: TonWeb.utils.fromNano(inValueNano || '0'),

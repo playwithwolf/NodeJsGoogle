@@ -371,7 +371,7 @@ async function getFullTransactionData(txHash, address, lt) {
     params: {
       address,
       limit: 1,
-      to_lt: toLt,
+     // to_lt: toLt,
       archival: true
     }
   };

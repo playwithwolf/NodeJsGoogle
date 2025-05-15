@@ -542,6 +542,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     // 发送请求并等待响应
     const response = await fetch(url);
     const data = await response.json();
+    console.log("data = "+data)
 
     // 如果请求失败，抛出错误
     if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
@@ -549,10 +550,11 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     // 提取交易记录
     const transactions = data.result;
     const utime = transactions[0].utime;
-    console.log("hash = "+client_hash)
+    
     const iscurrectTime = isUtimeCloseToTarget(utime,time)
     const inMsg = transactions[0].in_msg;
     const inValueNano = Number(inMsg?.value || 0); // 例如：'200000000'
+    console.log("inValueNano = "+inValueNano)
 
     const istimeok = isUtimeCloseToTarget(utime,time);
     const isamountok = isAmountMatch(amount, inValueNano);

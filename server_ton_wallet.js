@@ -347,18 +347,31 @@ function decodePayloadBase64(base64Str) {
 
 function getRealTxHashFromDataBase64(base64Data) {
   try {
-    const dataBuffer = Buffer.from(base64Data, 'base64');
-    console.log('原始 BOC Buffer:', dataBuffer.toString('hex'));
-
-    // 直接对原始 BOC 字节数据计算哈希
-    const hashBuffer = crypto.createHash('sha256').update(dataBuffer).digest();
-    const hashHex = hashBuffer.toString('hex');
+    const rootCell = Cell.fromBase64(base64Boc); // 直接就是 Cell 对象，不是数组
+    const hash = rootCell.hash(); // 计算哈希
+    const hashHex = Buffer.from(hash).toString('hex');
     console.log('计算出的真实交易哈希:', hashHex);
 
     return hashHex;
   } catch (e) {
     console.warn('⚠️ 计算真实交易哈希失败:', e.message);
     return '';
+  }
+}
+
+async function getFullTransactionData(txHash) {
+  const url = `${process.env.TESTNET_TON_TRAN}?hash=${txHash}&api_key=${process.env.TESTNET_API_KEY}`;
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!data.ok) {
+      throw new Error(`Error from TonCenter API: ${data.error.message}`);
+    }
+
+    return data.result; // 返回完整交易数据对象
+  } catch (err) {
+    console.error('Failed to fetch transaction:', err);
   }
 }
 
@@ -413,13 +426,16 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
 
     // 提取交易哈希、金额和时间
     const transactionDetails = filteredTransactions.map(tx => {
-       console.log("tx = " +JSON.stringify(tx))
+      
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
-      console.log("data = " +data)
+      const realHash = getRealTxHashFromDataBase64(data)
+      console.log("realHash = " +realHash)
+      const result = getFullTransactionData(realHash)
+      console.log("fullresult = " +JSON.stringify(result))
       return {
         hash: tx.transaction_id.hash,
-        realHash: getRealTxHashFromDataBase64(data),
+        realHash: realHash,
         amount: TonWeb.utils.fromNano(inMsg.value || '0'),
         time: new Date(tx.utime * 1000),
         from: inMsg.source || 'external',

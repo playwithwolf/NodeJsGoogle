@@ -407,6 +407,11 @@ async function getFullTransactionData(txHash, address, lt) {
       hasData: !!tx.data,
       hasInMsgBoc: !!(tx.in_msg && tx.in_msg.boc),
     });
+    const bocPayload = tx.in_msg?.msg_data?.body;
+    const cell2 = TonWeb.boc.Cell.oneFromBoc(bocPayload);
+    const slice2 = cell2.beginParse();
+    const decodedString2 = slice2.readString();
+    console.log("Payload:", decodedString2);
     return tx;
   } catch (err) {
     console.error('❌ Failed to fetch transaction:', err.message);

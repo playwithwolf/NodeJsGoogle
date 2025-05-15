@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@orbs-network/ton-access": "^2.3.3",
     "@ton/crypto": "^3.3.0",
     "axios": "^1.9.0",
     "body-parser": "^1.20.3",
@@ -9,6 +10,7 @@
     "google-auth-library": "^9.15.0",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
+    "ton": "^13.9.0",
     "ton-core": "^0.53.0",
     "ton-crypto": "^3.2.0",
     "tonweb": "^0.0.66",

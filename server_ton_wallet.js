@@ -381,7 +381,7 @@ async function getFullTransactionData(address,hash) {
     return hash;
   } catch (err) {
     console.error('❌ Failed to fetch transaction:', err.message);
-    return null;
+    return "";
   }
 }
 
@@ -435,23 +435,47 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
     filteredTransactions.sort((a, b) => b.utime - a.utime);
 
     // 提取交易哈希、金额和时间
-    const transactionDetails = filteredTransactions.map(tx => {
+    // const transactionDetails = filteredTransactions.map(tx => {
       
+    //   const inMsg = tx.in_msg || {};
+    //   const data = inMsg.msg_data ? inMsg.msg_data.body : '';
+    //   const realHash = getRealTxHashFromDataBase64(tx.data)
+    //   console.log("realHash = " +realHash)
+    //   const sourcehash = await getFullTransactionData(tx.address.account_address,realHash)
+
+    //   console.log("sourcehash = " +sourcehash)
+
+    //   // Buffer.from 可以把 Base64 字符串转换成字节数组
+    //   const buf = Buffer.from(sourcehash, 'base64');
+      
+    //   // 转成 hex 字符串
+    //   const traceIdHex = buf.toString('hex');
+     
+    //   console.log("traceIdHex = " +traceIdHex)
+
+    //   return {
+    //     hash: tx.transaction_id.hash,
+    //     realHash: realHash,
+    //     sourcehash: sourcehash,
+    //     traceIdHex: traceIdHex,
+    //     amount: TonWeb.utils.fromNano(inMsg.value || '0'),
+    //     time: new Date(tx.utime * 1000),
+    //     from: inMsg.source || 'external',
+    //     to: inMsg.destination || serverAddress,
+    //   };
+    // });
+    const transactionDetails = await Promise.all(filteredTransactions.map(async (tx) => {
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
-      const realHash = getRealTxHashFromDataBase64(tx.data)
-      console.log("realHash = " +realHash)
-      const sourcehash = await getFullTransactionData(tx.address.account_address,realHash)
+      const realHash = getRealTxHashFromDataBase64(tx.data);
+      console.log("realHash = " + realHash);
 
-      console.log("sourcehash = " +sourcehash)
+      const sourcehash = await getFullTransactionData(tx.address.account_address, realHash);
+      console.log("sourcehash = " + sourcehash);
 
-      // Buffer.from 可以把 Base64 字符串转换成字节数组
       const buf = Buffer.from(sourcehash, 'base64');
-      
-      // 转成 hex 字符串
       const traceIdHex = buf.toString('hex');
-     
-      console.log("traceIdHex = " +traceIdHex)
+      console.log("traceIdHex = " + traceIdHex);
 
       return {
         hash: tx.transaction_id.hash,
@@ -463,7 +487,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
         from: inMsg.source || 'external',
         to: inMsg.destination || serverAddress,
       };
-    });
+    }));
 
     return transactionDetails;
   } catch (err) {

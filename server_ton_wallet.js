@@ -429,7 +429,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       
       const inMsg = tx.in_msg || {};
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
-      const realHash = getRealTxHashFromDataBase64(data)
+      const realHash = getRealTxHashFromDataBase64(tx.data)
       console.log("realHash = " +realHash)
       const result = getFullTransactionData(realHash)
       console.log("fullresult = " +JSON.stringify(result))

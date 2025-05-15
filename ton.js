@@ -449,10 +449,10 @@ router.post('/getTransactionsOutOrderId', async (req, res) => {
 
 router.post('/getTransactionsInHash', async (req, res) => {
   try {
-    const { hash , amount, time } = req.body;
+    const { hash , amount, time ,timezoneOffset } = req.body;
 
 
-    if (!hash || !amount || !time) {
+    if (!hash || !amount || !time || !timezoneOffset) {
       return res.status(400).json({
         error: '参数缺失',
         success: false,
@@ -463,7 +463,7 @@ router.post('/getTransactionsInHash', async (req, res) => {
     const server_address = await getAddress();
     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 
-    const transactions = await getTransactionsInHash(server_addressStr, amount,hash,time );
+    const transactions = await getTransactionsInHash(server_addressStr, amount,hash,time ,timezoneOffset);
 
     return res.status(200).json({
       success: true,

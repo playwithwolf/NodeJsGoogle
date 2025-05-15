@@ -534,7 +534,7 @@ function isAmountMatch(userInputStr, chainValueNanoTON, tolerance = 1e-9) {
   return diff <= tolerance;
 }
 
-async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
+async function getTransactionsInHash(serverAddress,amount, client_hash, time,timezoneOffset) {
   try {
     // 构建 API 请求 URL
     const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=1&api_key=${process.env.TESTNET_API_KEY}&hash=${client_hash}`;
@@ -554,7 +554,7 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
     const transactions = data.result;
     const utime = transactions[0].utime;
     
-    const iscurrectTime = isUtimeCloseToTarget(utime,time)
+    const iscurrectTime = isUtimeCloseToTarget(utime,time,timezoneOffset)
     const inMsg = transactions[0].in_msg;
     const inValueNano = inMsg?.value; // 例如：'200000000'
     console.log("inValueNano = "+inValueNano)
@@ -583,14 +583,15 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
  * @param {number} toleranceSeconds 允许误差秒数，默认60秒
  * @returns {boolean} 是否在误差范围内
  */
-function isUtimeCloseToTarget(utime, targetTimeStr, toleranceSeconds = 60) {
+function isUtimeCloseToTarget(utime, targetTimeStr, timezoneOffset, toleranceSeconds = 60) {
   // 兼容 "2025/5/14 19:38:49" -> "2025-05-14T19:38:49"
-  const isoTimeStr = targetTimeStr
-    .replace(/\//g, '-')                        // 替换斜杠
+ const isoStr = datetimeStr
+    .replace(/\//g, '-') // 替换 / 为 -
     .replace(/(\d{4})-(\d{1,2})-(\d{1,2})/, (_, y, m, d) => {
       return `${y}-${m.padStart?.(2, '0') || ('0' + m).slice(-2)}-${d.padStart?.(2, '0') || ('0' + d).slice(-2)}`;
-    })                                          // 补齐月份和日期的前导零
-    .replace(' ', 'T');                         // 替换空格为 T，使其更像 ISO
+    })
+    .replace(' ', 'T') + timezoneOffsetStr;
+                         // 替换空格为 T，使其更像 ISO
   console.log(" isoTimeStr = "+isoTimeStr)
   const targetTime = new Date(isoTimeStr);
   console.log(" targetTime = "+targetTime)
@@ -598,7 +599,7 @@ function isUtimeCloseToTarget(utime, targetTimeStr, toleranceSeconds = 60) {
   console.log(" targetTs = "+targetTs)
 
   console.log(" abs = "+Math.abs(utime - targetTs))
-  
+
   return Math.abs(utime - targetTs) <= toleranceSeconds;
 }
 

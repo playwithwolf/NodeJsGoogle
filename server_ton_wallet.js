@@ -387,6 +387,7 @@ async function getFullTransactionData(txHash, address, lt) {
       body: JSON.stringify(body),
     });
     const json = await res.json();
+    console.log('→ Request json :', JSON.stringify(json));
     if (json.error) {
       throw new Error(`RPC Error ${json.error.code}: ${json.error.message}`);
     }

@@ -359,73 +359,26 @@ function getRealTxHashFromDataBase64(base64Data) {
   }
 }
 
-async function getFullTransactionData(txHash, address, lt) {
-  const rpcUrl = process.env.TESTNET_TON_API; // e.g. https://testnet.toncenter.com/api/v2/jsonRPC
-  const apiKey = process.env.TESTNET_API_KEY;  // 如果需要的话
-  const toLt = (BigInt(lt) + 1n).toString();
-  // 构造 JSON-RPC 请求体
-  const body = {
-    jsonrpc: '2.0',
-    id: 1,
-    method: 'getTransactions',
-    params: {
-      address,
-      limit: 1,
-     // to_lt: toLt,
-      archival: true
-    }
-  };
-
-  const url = apiKey ? `${rpcUrl}?api_key=${apiKey}` : rpcUrl;
-  console.log('→ JSON-RPC URL:', url);
-  console.log('→ Request body:', JSON.stringify(body));
-
+async function getFullTransactionData(address,hash) {
+  
+ const url = `${process.env.TESTNET_TON_TRAN}?address=${address}&limit=1&api_key=${process.env.TESTNET_API_KEY}&hash=${hash}`;
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const json = await res.json();
-    console.log('→ Request json :', JSON.stringify(json));
-    if (json.error) {
-      throw new Error(`RPC Error ${json.error.code}: ${json.error.message}`);
-    }
-    const txList = Array.isArray(json.result) ? json.result : [];
-    if (txList.length === 0) {
-      console.warn('⚠️ 没有拿到任何交易，请检查 address/lt 是否正确');
-      return null;
-    }
-    // 找到 hash 匹配的那笔
-    const tx = txList.find(t => {
-      const h = t.transaction_id?.hash;
-      return h && (h.replace(/^0x/, '') === txHash.replace(/^0x/, ''));
-    }) ?? txList[0];
-    console.log('← Fetched tx:', {
-      lt: tx.transaction_id.lt,
-      hash: tx.transaction_id.hash,
-      hasData: !!tx.data,
-      hasInMsgBoc: !!(tx.in_msg && tx.in_msg.boc),
-    });
-    const bocPayload = tx.in_msg?.msg_data?.body;
-    // 把 Base64 转成 Buffer
-    const buffer = Buffer.from(bocPayload, 'base64');
 
-    // 然后从 Buffer 创建 Cell
-    const cells = TonWeb.boc.Cell.fromBoc(buffer);
+    // 打印 URL，方便调试
+    console.log('请求 URL:', url);
 
-    // 一般第一个 cell 就是需要解析的
-    const cell = cells[0];
+    // 发送请求并等待响应
+    const response = await fetch(url);
+    const data = await response.json();
 
-    // 开始解析
-    const slice = cell.beginParse();
-
-    // 根据具体数据结构用 slice 读取，比如试试读字符串
-    const str = slice.readString();
-
-    // 打印结果
-    console.log("Parsed string:", str);
-    return tx;
+    // 如果请求失败，抛出错误
+    if (!data.ok) throw new Error(data.error?.message || '无法获取交易记录');
+    / 提取交易记录
+    const transactions = data.result;
+    hash = transactions[0].transaction_id.hash;
+    console.log("hash = "+hash)
+    
+    return hash;
   } catch (err) {
     console.error('❌ Failed to fetch transaction:', err.message);
     return null;
@@ -488,11 +441,23 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
       const realHash = getRealTxHashFromDataBase64(tx.data)
       console.log("realHash = " +realHash)
-      const result = getFullTransactionData(realHash,tx.address.account_address,tx.transaction_id.lt)
-      console.log("fullresult = " +JSON.stringify(result))
+      const sourcehash = getFullTransactionData(tx.address.account_address,realHash)
+
+      console.log("sourcehash = " +sourcehash)
+
+      // Buffer.from 可以把 Base64 字符串转换成字节数组
+      const buf = Buffer.from(sourcehash, 'base64');
+      
+      // 转成 hex 字符串
+      const traceIdHex = buf.toString('hex');
+     
+      console.log("traceIdHex = " +traceIdHex)
+
       return {
         hash: tx.transaction_id.hash,
         realHash: realHash,
+        sourcehash: sourcehash,
+        traceIdHex: traceIdHex,
         amount: TonWeb.utils.fromNano(inMsg.value || '0'),
         time: new Date(tx.utime * 1000),
         from: inMsg.source || 'external',

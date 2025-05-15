@@ -347,7 +347,7 @@ function decodePayloadBase64(base64Str) {
 
 function getRealTxHashFromDataBase64(base64Data) {
   try {
-    const rootCell = CoreCell.fromBase64(base64Boc); // 直接就是 Cell 对象，不是数组
+    const rootCell = CoreCell.fromBase64(base64Data); // 直接就是 Cell 对象，不是数组
     const hash = rootCell.hash(); // 计算哈希
     const hashHex = Buffer.from(hash).toString('hex');
     console.log('计算出的真实交易哈希:', hashHex);

@@ -560,14 +560,14 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time,tim
     console.log("inValueNano = "+inValueNano)
     console.log("utime = "+utime)
     console.log("time = "+time)
-    const istimeok = isUtimeCloseToTarget(utime,time);
-    console.log("istimeok = "+istimeok)
+  
+    console.log("iscurrectTime = "+iscurrectTime)
     const isamountok = isAmountMatch(amount, inValueNano);
     console.log("isamountok = "+isamountok)
     
     return {   
             amount: TonWeb.utils.fromNano(String(inValueNano)),
-            isOK: istimeok && isamountok
+            isOK: iscurrectTime && isamountok
           };
   } catch (err) {
     console.error('获取交易记录失败:', err);

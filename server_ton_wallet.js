@@ -525,10 +525,13 @@ async function getTransactionsOutOrderId(serverAddress, orderId, limit = 20) {
 }
 
 function isAmountMatch(userInputStr, chainValueNanoTON, tolerance = 1e-9) {
-  const chainAmount = Number(chainValueNanoTON) / 1e9; // 转为 TON
-  const userAmount = parseFloat(userInputStr);         // 转为浮点数
+  const chainAmount = parseFloat(TonWeb.utils.fromNano(chainValueNanoTON)); // 确保用 fromNano 转换
+  const userAmount = parseFloat(userInputStr);
 
-  return Math.abs(chainAmount - userAmount) <= tolerance;
+  const diff = Math.abs(chainAmount - userAmount);
+  console.log(`chain: ${chainAmount}, user: ${userAmount}, diff: ${diff}`);
+  
+  return diff <= tolerance;
 }
 
 async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
@@ -580,7 +583,15 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time) {
  * @returns {boolean} 是否在误差范围内
  */
 function isUtimeCloseToTarget(utime, targetTimeStr, toleranceSeconds = 60) {
-  const targetTime = new Date(targetTimeStr.replace(/\//g, '-'));
+  // 兼容 "2025/5/14 19:38:49" -> "2025-05-14T19:38:49"
+  const isoTimeStr = targetTimeStr
+    .replace(/\//g, '-')                        // 替换斜杠
+    .replace(/(\d{4})-(\d{1,2})-(\d{1,2})/, (_, y, m, d) => {
+      return `${y}-${m.padStart?.(2, '0') || ('0' + m).slice(-2)}-${d.padStart?.(2, '0') || ('0' + d).slice(-2)}`;
+    })                                          // 补齐月份和日期的前导零
+    .replace(' ', 'T');                         // 替换空格为 T，使其更像 ISO
+
+  const targetTime = new Date(isoTimeStr);
   const targetTs = Math.floor(targetTime.getTime() / 1000);
   return Math.abs(utime - targetTs) <= toleranceSeconds;
 }

@@ -359,8 +359,8 @@ function getRealTxHashFromDataBase64(base64Data) {
   }
 }
 
-async function getFullTransactionData(txHash) {
-  const url = `${process.env.TESTNET_TON_TRAN}?hash=${txHash}&api_key=${process.env.TESTNET_API_KEY}`;
+async function getFullTransactionData(txHash,address,lt) {
+  const url = `${process.env.TESTNET_TON_TRAN}?address=${address}&limit=1&lt=${lt}&hash=${txHash}&api_key=${process.env.TESTNET_API_KEY}`;
   console.log(url)
   try {
     const response = await fetch(url);
@@ -432,7 +432,7 @@ async function getTransactionsForOrderId(serverAddress, orderId, limit = 20) {
       const data = inMsg.msg_data ? inMsg.msg_data.body : '';
       const realHash = getRealTxHashFromDataBase64(tx.data)
       console.log("realHash = " +realHash)
-      const result = getFullTransactionData(realHash)
+      const result = getFullTransactionData(realHash,tx.address.account_address,tx.transaction_id.lt)
       console.log("fullresult = " +JSON.stringify(result))
       return {
         hash: tx.transaction_id.hash,

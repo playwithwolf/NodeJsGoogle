@@ -7,6 +7,7 @@ const fetch = require('node-fetch');
 const crypto = require('crypto');
 const { Cell: TonWebCel } = TonWeb.boc;
 const { Cell: CoreCell } = require('ton-core');
+const { Address } = require('@ton/core');
 
 const provider = new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
@@ -36,9 +37,11 @@ async function getAddress() {
 }
 
 async function getAddressForWeb() {
-  await init();
-  const address = await wallet.getAddress();
-  return address.toString({ bounceable: false, urlSafe: true }); // ✅ Tonkeeper 可识别
+  await init(); // 你自己的钱包初始化逻辑
+  const tonwebAddress = await wallet.getAddress(); // TonWeb 的 Address 实例
+  const raw = tonwebAddress.toFriendly(); // 转为标准 bounceable base64：EQ...
+  const coreAddress = Address.parse(raw); // 用 @ton/core 解析
+  return coreAddress.toString({ bounceable: false, urlSafe: true }); // ✅ 返回 0Q... 地址
 }
 
 // 获取当前余额（单位为 nanoTON）

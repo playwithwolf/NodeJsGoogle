@@ -20,7 +20,7 @@ const check_server_ton_wallet = require('./check_server_ton_wallet');
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-router.post('/createTonWallet', async (req, res) => {
+router.post('/createTonWallet', async (req, res) => {  //创建一个可以控制的新的可以被链子上激活的 钱包
   try {
     // 1. 生成助记词 & 密钥对
     const mnemonics = await tonMnemonic.generateMnemonic();
@@ -140,7 +140,7 @@ router.post('/createTonWallet', async (req, res) => {
 
 
 
-router.post('/getTonBalance', async (req, res) => {
+router.post('/getTonBalance', async (req, res) => {   //获得余额
 
 try {
     const { address } = req.body;
@@ -171,7 +171,7 @@ try {
 });
 
 
-router.post('/serverSendTon', async (req, res) => {
+router.post('/serverSendTon', async (req, res) => {      //从服务器给传递的地址转账 参数是目标钱包的助记词
 
 try {
     const { orderId , mnemonics , amountTON } = req.body;
@@ -289,7 +289,7 @@ try {
 
 
 
-router.post('/serverSendTonByAddress', async (req, res) => {
+router.post('/serverSendTonByAddress', async (req, res) => {  //从服务器给传递的地址转账 参数是目标地址
 
 try {
     const { orderId , userAddress , amountTON } = req.body;
@@ -406,7 +406,7 @@ try {
 });
 
 
-router.post('/sendTonToServer', async (req, res) => {
+router.post('/sendTonToServer', async (req, res) => {   //使用服务器生成钱包做转账的
   try {
     const { orderId, mnemonics, amountTON } = req.body;
 
@@ -506,7 +506,7 @@ router.post('/sendTonToServer', async (req, res) => {
   }
 });
 
-router.post('/createTonPaymentLink', async (req, res) => {
+router.post('/createTonPaymentLink', async (req, res) => {  //生成支付 二维码  
 
    const { orderId, amountTON } = req.body;
 
@@ -542,7 +542,7 @@ router.post('/createTonPaymentLink', async (req, res) => {
 
 });
 
-router.post('/checkTonPaymentLink', async (req, res) => {
+router.post('/checkTonPaymentLink', async (req, res) => {     //对于 二维码 验证
   try {
     const { orderId, expectedTON } = req.body;
 
@@ -565,6 +565,7 @@ router.post('/checkTonPaymentLink', async (req, res) => {
       const amountNano = BigInt(TonWeb.utils.toNano(tx.amount)); // 0.2 -> 200000000n
       const expectedNano = BigInt(TonWeb.utils.toNano(expectedTON)); // 0.4 -> 400000000n
 
+
       if (amountNano >= expectedNano)  {
         return res.json({ success: true, paid: true });
       }
@@ -581,7 +582,7 @@ router.post('/checkTonPaymentLink', async (req, res) => {
   }
 });
 
-router.post('/getTransactionsInOrderId', async (req, res) => {
+router.post('/getTransactionsInOrderId', async (req, res) => {  //通过订单号查询服务器转入 成功和信息
   try {
     const { orderId } = req.body;
 
@@ -611,7 +612,7 @@ router.post('/getTransactionsInOrderId', async (req, res) => {
   }
 });
 
-router.post('/getTransactionsOutOrderId', async (req, res) => {
+router.post('/getTransactionsOutOrderId', async (req, res) => {  //通过订单号查询服务器转出 成功和信息
   try {
     const { orderId } = req.body;
 
@@ -642,7 +643,7 @@ router.post('/getTransactionsOutOrderId', async (req, res) => {
 });
 
 
-router.post('/getTransactionsInHash', async (req, res) => {
+router.post('/getTransactionsInHash', async (req, res) => {  //通过网站上显示的 trace ID的 hash 查询服务器转入 成功和信息
   try {
     const { hash , amount, time ,timezoneOffset } = req.body;
 
@@ -673,71 +674,6 @@ router.post('/getTransactionsInHash', async (req, res) => {
   }
 });
 
-// router.post('/prepare-transfer', async (req, res) => {
-//   try {
-//     const { fromPublicKey, toAddress, amount } = req.body;
-
-//     if (!fromPublicKey || !toAddress || !amount) {
-//       return res.status(400).json({ error: '缺少必要的参数' });
-//     }
-
-//     // 创建钱包实例
-//     const WalletClass = tonweb.wallet.all.v3R2;
-//     const wallet = new WalletClass(tonweb.provider, {
-//       publicKey: Buffer.from(fromPublicKey, 'hex'),
-//       wc: 0,
-//     });
-
-//     // 获取钱包地址和 seqno
-//     const fromAddress = await wallet.getAddress();
-//     const seqno = await wallet.methods.seqno().call();
-
-//     // 构建转账消息
-//     const transfer = await wallet.methods.transfer({
-//       secretKey: Buffer.alloc(64), // 占位符，实际签名在客户端完成
-//       toAddress,
-//       amount: TonWeb.utils.toNano(amount),
-//       seqno,
-//       sendMode: 3,
-//     });
-
-//     // 获取未签名的 BOC
-//     const boc = await transfer.getBoc(false);
-
-//     res.status(200).json({
-//       fromAddress: fromAddress.toString(true, true, true),
-//       toAddress,
-//       amount,
-//       seqno,
-//       boc: boc.toString('base64'),
-//     });
-//   } catch (error) {
-//     console.error('构建转账请求失败:', error);
-//     res.status(500).json({ error: '构建转账请求失败' });
-//   }
-// });
-
-// // 定义路由，接收已签名的 BOC 并广播
-// router.post('/broadcast', async (req, res) => {
-//   try {
-//     const { signedBocBase64 } = req.body;
-
-//     if (!signedBocBase64) {
-//       return res.status(400).json({ error: '缺少 signedBocBase64 参数' });
-//     }
-
-//     // 将 Base64 编码的 BOC 转换为字节数组
-//     const bocBytes = Buffer.from(signedBocBase64, 'base64');
-
-//     // 使用 TonWeb 将 BOC 发送到区块链
-//     await tonweb.provider.sendBoc(bocBytes);
-
-//     res.status(200).json({ message: '交易已成功广播到区块链' });
-//   } catch (error) {
-//     console.error('广播交易失败:', error);
-//     res.status(500).json({ error: '广播交易失败' });
-//   }
-// });
 
 
 

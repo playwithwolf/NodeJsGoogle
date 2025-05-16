@@ -550,21 +550,26 @@ router.post('/checkTonPaymentLink', async (req, res) => {
       return res.status(400).json({ success: false, error: '参数缺失', orderId, expectedTON });
     }
 
-    const serverAddress = await getAddress();
+    //const serverAddress = await getAddress();
     console.log('[CHECK] Server Address:', serverAddress);
 
-    const txList = await tonweb.provider.getTransactions(serverAddress);
+    // const txList = await tonweb.provider.getTransactions(serverAddress);
+     const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+    const txList = await getTransactionsInOrderId(server_addressStr, orderId);
+
 
     const expectedNano = TonWeb.utils.toNano(expectedTON.toString());
     console.log('[CHECK] Expecting >=', expectedNano.toString(), 'nano TON');
 
     for (const tx of txList) {
-      const msg = tx.in_msg?.message || '';
-      const amountNano = BigInt(tx.in_msg?.value || 0);
+       
+      const amountNano = tx.amount
 
-      console.log('[TX] Amount:', amountNano.toString(), 'Msg:', msg);
+ 
 
-      if (msg.includes(orderId) && amountNano >= BigInt(expectedNano)) {
+      if (  amountNano >= BigInt(expectedNano)) {
         return res.json({ success: true, paid: true });
       }
     }

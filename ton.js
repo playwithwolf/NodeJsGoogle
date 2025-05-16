@@ -346,7 +346,7 @@ try {
      }
 
 
-    await sendTonHaveOrderId(useraddress, amountTON,orderId);
+    await sendTonHaveOrderId(userAddress, amountTON,orderId);
     console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
 
     await delay(1000);
@@ -376,7 +376,7 @@ try {
         error: '转账未到账，请稍后重试', 
         success: false,
         orderId: orderId,
-        mnemonics: mnemonics,
+        userAddress: userAddress,
         amountTON: amountTON,
       });
     }
@@ -385,7 +385,7 @@ try {
      res.status(200).json({
       success: true,
       orderId: orderId,
-      mnemonics: mnemonics,
+      userAddress: userAddress,
       amountTON: amountTON,
    
     });

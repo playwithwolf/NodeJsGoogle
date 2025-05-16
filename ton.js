@@ -523,7 +523,7 @@ router.post('/createTonPaymentLink', async (req, res) => {
   console.log("server_address = "+server_address)
   const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
   console.log("amountNano = "+amountNano)
-  const tonLink = buildTonPaymentLink(server_address, amountTON, orderId);
+  const tonLink = buildTonPaymentLink(server_address, amountNano, orderId);
   console.log("tonLink = "+tonLink)
   QRCode.toDataURL(tonLink, (err, url) => {
     if (!err) {

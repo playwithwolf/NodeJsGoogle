@@ -524,7 +524,7 @@ router.post('/createTonPaymentLink', async (req, res) => {
   const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
   console.log("amountNano = "+amountNano)
   const tonLink = buildTonPaymentLink(server_address, amountTON, orderId);
-
+  console.log("tonLink = "+tonLink)
   QRCode.toDataURL(tonLink, (err, url) => {
     if (!err) {
       // 展示 base64 图像

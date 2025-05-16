@@ -543,23 +543,27 @@ router.post('/createTonPaymentLink', async (req, res) => {
 });
 
 router.post('/checkTonPaymentLink', async (req, res) => {
-  const { orderId, expectedTON } = req.body;
+  try {
+    const { orderId, expectedTON } = req.body;
+    const serverAddress = await getAddress(); // 收款地址
+    const txList = await tonweb.provider.getTransactions(serverAddress);
 
-  const serverAddress = await getAddress(); // 你的收款地址
-  const txList = await tonweb.provider.getTransactions(serverAddress);
+    for (const tx of txList) {
+      const msg = tx.in_msg?.message || '';
+      const amountNano = BigInt(tx.in_msg?.value || 0);
+      const expectedNano = BigInt(TonWeb.utils.toNano(expectedTON));
 
-  for (const tx of txList) {
-    const msg = tx.in_msg?.message || '';
-    const amountNano = BigInt(tx.in_msg?.value || 0);
-    const expectedNano = BigInt(TonWeb.utils.toNano(expectedTON));
-    
-    if (msg.includes(orderId) && amountNano >= expectedNano) {
-      return res.json({ success: true, paid: true });
+      if (msg.includes(orderId) && amountNano >= expectedNano) {
+        return res.json({ success: true, paid: true });
+      }
     }
+    return res.json({ success: true, paid: false });
+  } catch (error) {
+    console.error('查询交易出错:', error);
+    return res.status(500).json({ success: false, error: error.message || String(error) });
   }
-
-  return res.json({ success: true, paid: false });
 });
+
 
 router.post('/getTransactionsInOrderId', async (req, res) => {
   try {

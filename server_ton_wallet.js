@@ -37,18 +37,19 @@ async function getAddress() {
 }
 
 async function getAddressForWeb() {
-  await init();
+ await init();
   const rawAddress = await wallet.getAddress();
 
-  // 用 TonWeb Address 统一处理，生成标准 bounceable base64
   const tonwebAddress = new TonWeb.utils.Address(rawAddress);
-  const friendlyAddress = tonwebAddress.toString(true, true, false); // EQ...格式
+  const friendlyAddress = tonwebAddress.toString(true, true, false); // EQ...
 
-  // 用 @ton/core 解析
   const coreAddress = Address.parse(friendlyAddress);
-  console.log("coreAddress = "+coreAddress)
-  // 输出 Tonkeeper 可识别的 url-safe non-bounceable 地址（0Q...）
-  return coreAddress.toString({ bounceable: false, urlSafe: true });
+
+  const finalAddress = coreAddress.toString({ bounceable: false, urlSafe: true }); // ✅ 0Q...
+
+  console.log("✅ Tonkeeper-compatible address: " + finalAddress);
+
+  return finalAddress;
 }
 
 // 获取当前余额（单位为 nanoTON）

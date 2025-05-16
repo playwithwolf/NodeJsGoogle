@@ -550,10 +550,7 @@ router.post('/checkTonPaymentLink', async (req, res) => {
       return res.status(400).json({ success: false, error: '参数缺失', orderId, expectedTON });
     }
 
-    //const serverAddress = await getAddress();
-    console.log('[CHECK] Server Address:', serverAddress);
-
-    // const txList = await tonweb.provider.getTransactions(serverAddress);
+    
      const server_address = await getAddress();
     const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
 

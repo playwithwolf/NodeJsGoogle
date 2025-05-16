@@ -521,7 +521,7 @@ router.post('/createTonPaymentLink', async (req, res) => {
   // const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
   //const toAddress = Address.parse(server_address).toString({ urlSafe: true, bounceable: false });
   console.log("server_address = "+server_address)
-  const amountNano2 = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
+  const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
   console.log("amountNano = "+amountNano)
   const tonLink = buildTonPaymentLink(server_address, amountTON, orderId);
 

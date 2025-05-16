@@ -562,11 +562,10 @@ router.post('/checkTonPaymentLink', async (req, res) => {
 
     for (const tx of txList) {
        
-      const amountNano = tx.amount
+      const amountNano = BigInt(TonWeb.utils.toNano(tx.amount)); // 0.2 -> 200000000n
+      const expectedNano = BigInt(TonWeb.utils.toNano(expectedTON)); // 0.4 -> 400000000n
 
- 
-
-      if (  amountNano >= BigInt(expectedNano)) {
+      if (amountNano >= expectedNano)  {
         return res.json({ success: true, paid: true });
       }
     }

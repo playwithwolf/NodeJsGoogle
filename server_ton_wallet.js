@@ -400,6 +400,14 @@ async function getFullTransactionData(address,hash) {
   }
 }
 
+function safeBase64Decode(str) {
+  try {
+    return Buffer.from(str, 'base64').toString('utf-8');
+  } catch {
+    return '';
+  }
+}
+
 async function getTransactionsInOrderId(serverAddress, orderId, limit = 20) {
   try {
     // 构建 API 请求 URL
@@ -435,15 +443,18 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 20) {
       // message 解码（有时是 base64，有时是明文）
       let message = '';
       try {
-        message = Buffer.from(inMsg.message || '', 'base64').toString('utf-8');
+        message = safeDecodeBase64ToUtf8(inMsg.message || '');//.toString('utf-8');
       } catch {
         message = inMsg.message || '';
       }
 
+      const rawMessage = inMsg.message || '';
+
+      console.log('✔️ rawMessage:', rawMessage);
       console.log('✔️ 解码后的 Message:', message);
       console.log('✔️ 解码后的 Payload:', payload);
 
-      return message.includes(orderId) || payload.includes(orderId);
+      return message.includes(orderId) || rawMessage.includes(orderId) || payload.includes(orderId);
     });
 
     // 按时间戳排序（时间越近越前）

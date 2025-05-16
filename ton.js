@@ -493,7 +493,7 @@ router.post('/sendTonToServer', async (req, res) => {
       success: true,
       orderId,
       amountTON,
-      clientAddress: clientAddressStr
+      mnemonics: mnemonics
     });
   } catch (error) {
     console.error('[serverSendTon] 发生错误:', error);
@@ -505,20 +505,26 @@ router.post('/sendTonToServer', async (req, res) => {
 });
 
 
-router.post('/sendTonToServerByAddress', async (req, res) => {
+router.post('/sendTonToServerByPublicKey', async (req, res) => {
   try {
-    const { orderId, userAddress, amountTON } = req.body;
+    const { orderId, publicKey, amountTON } = req.body;
 
-    if (!orderId || !userAddress || !amountTON) {
+    if (!orderId || !userAddress || !amountTON  || !publicKey) {
       return res.status(400).json({
         error: '参数缺失',
         success: false,
-        orderId, userAddress, amountTON
+        orderId,  amountTON, publicKey
       });
     }
+    
+    const WalletClass = tonweb.wallet.all.v3R2;
+    const client_wallet = new WalletClass(tonweb.provider, {
+      publicKey: publicKey,
+      wc: 0
+    });
 
- 
-    const clientAddressStr = new TonWeb.utils.Address(userAddress).toString(true, true, false);
+    const client_address = await client_wallet.getAddress();
+    const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
 
     const clientInfo = await tonweb.provider.getAddressInfo(clientAddressStr);
     const clientBalance = BigInt(clientInfo.balance || 0n);
@@ -578,7 +584,7 @@ router.post('/sendTonToServerByAddress', async (req, res) => {
       return res.status(500).json({
         error: '转账未到账，请稍后重试',
         success: false,
-        orderId, userAddress, amountTON
+        orderId, publicKey, amountTON
       });
     }
 
@@ -586,7 +592,7 @@ router.post('/sendTonToServerByAddress', async (req, res) => {
       success: true,
       orderId,
       amountTON,
-      userAddress
+      publicKey
     });
   } catch (error) {
     console.error('[serverSendTon] 发生错误:', error);

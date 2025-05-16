@@ -639,6 +639,12 @@ function hexToBytes(hex) {
   return bytes;
 }
 
+function buildTonPaymentLink(toAddress: string, amountTON: string, orderId: string): string {
+  const text = encodeURIComponent(`orderId:${orderId}`);
+  return `ton://transfer/${toAddress}?amount=${amountTON}&text=${text}`;
+}
+
+
 module.exports = {
   init,
   getAddress,
@@ -652,5 +658,6 @@ module.exports = {
   getTransactionsInOrderId,
   getTransactionsOutOrderId,
   getTransactionsInHash,
-  hexToBytes
+  hexToBytes,
+  buildTonPaymentLink,
 };

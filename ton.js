@@ -5,6 +5,7 @@ const router = express.Router();
 const querystring = require('querystring');
 const tonMnemonic = require('tonweb-mnemonic');
 const TonWeb = require('tonweb');
+const QRCode = require('qrcode');
 require('dotenv').config();
 const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
@@ -504,8 +505,56 @@ router.post('/sendTonToServer', async (req, res) => {
   }
 });
 
+router.post('/createTonPaymentLink', async (req, res) => {
 
+   const { orderId, amountTON } = req.body;
 
+    if (!orderId || !mnemonics || !amountTON) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, amountTON
+      });
+    }
+  const server_address = await getAddress();
+  const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
+  const tonLink = buildTonPaymentLink(toAddress, amountTON, orderId);
+
+  QRCode.toDataURL(tonLink, (err, url) => {
+    if (!err) {
+      // 展示 base64 图像
+          res.status(200).json({
+            success: true,
+            url
+          });
+    }else{
+        res.status(500).json({
+          error: error.message || String(error),
+          success: false
+        });
+    } 
+  });
+
+});
+
+router.post('/checkTonPaymentLink', async (req, res) => {
+  const { orderId, expectedTON } = req.body;
+
+  const serverAddress = await getAddress(); // 你的收款地址
+  const txList = await tonweb.provider.getTransactions(serverAddress);
+
+  for (const tx of txList) {
+    const msg = tx.in_msg?.message || '';
+    const amountNano = BigInt(tx.in_msg?.value || 0);
+    const expectedNano = BigInt(TonWeb.utils.toNano(expectedTON));
+    
+    if (msg.includes(orderId) && amountNano >= expectedNano) {
+      return res.json({ success: true, paid: true });
+    }
+  }
+
+  return res.json({ success: true, paid: false });
+});
 
 router.post('/getTransactionsInOrderId', async (req, res) => {
   try {
@@ -577,7 +626,7 @@ router.post('/getTransactionsInHash', async (req, res) => {
       return res.status(400).json({
         error: '参数缺失',
         success: false,
-        orderId, mnemonics, amountTON
+        hash , amount, time ,timezoneOffset
       });
     }
 

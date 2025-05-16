@@ -630,6 +630,14 @@ function isUtimeCloseToTarget(utime, targetTimeStr, timezoneOffset, toleranceSec
 //   }
 // }
 
+function hexToBytes(hex) {
+  if (!/^[0-9a-f]{64}$/i.test(hex)) throw new Error("Invalid hex publicKey");
+  const bytes = new Uint8Array(32);
+  for (let i = 0; i < 64; i += 2) {
+    bytes[i / 2] = parseInt(hex.substr(i, 2), 16);
+  }
+  return bytes;
+}
 
 module.exports = {
   init,
@@ -644,4 +652,5 @@ module.exports = {
   getTransactionsInOrderId,
   getTransactionsOutOrderId,
   getTransactionsInHash,
+  hexToBytes
 };

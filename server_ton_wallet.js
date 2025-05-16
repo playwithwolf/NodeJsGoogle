@@ -640,7 +640,7 @@ function hexToBytes(hex) {
 }
 
 function buildTonPaymentLink(toAddress, amountTON, orderId) {
-  const text = encodeURIComponent(`orderId:${orderId}`);
+  const text = encodeURIComponent(`${orderId}`);
   return `ton://transfer/${toAddress}?amount=${amountTON}&text=${text}`;
 }
 

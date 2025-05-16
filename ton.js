@@ -6,6 +6,7 @@ const querystring = require('querystring');
 const tonMnemonic = require('tonweb-mnemonic');
 const TonWeb = require('tonweb');
 const QRCode = require('qrcode');
+const { Address } = require('@ton/core');
 require('dotenv').config();
 const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
@@ -517,7 +518,10 @@ router.post('/createTonPaymentLink', async (req, res) => {
       });
     }
   const server_address = await getAddress();
-  const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
+  // const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
+  const toAddress = Address.parse(server_address).toString({ urlSafe: true, bounceable: true });
+  const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
+ 
   const tonLink = buildTonPaymentLink(toAddress, amountTON, orderId);
 
   QRCode.toDataURL(tonLink, (err, url) => {

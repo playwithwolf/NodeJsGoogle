@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@orbs-network/ton-access": "^2.3.3",
+    "@ton/core": "^0.60.1",
     "@ton/crypto": "^3.3.0",
     "axios": "^1.9.0",
     "body-parser": "^1.20.3",

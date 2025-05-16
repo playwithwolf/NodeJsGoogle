@@ -517,13 +517,13 @@ router.post('/createTonPaymentLink', async (req, res) => {
         orderId, amountTON
       });
     }
-  const server_address = await getAddress();
+  const server_address = await getAddressForWeb();
   // const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
-  const toAddress = Address.parse(server_address).toString({ urlSafe: true, bounceable: false });
-  console.log("toAddress = "+toAddress)
+  //const toAddress = Address.parse(server_address).toString({ urlSafe: true, bounceable: false });
+  console.log("server_address = "+server_address)
   const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
   console.log("amountNano = "+amountNano)
-  const tonLink = buildTonPaymentLink(toAddress, amountTON, orderId);
+  const tonLink = buildTonPaymentLink(server_address, amountTON, orderId);
 
   QRCode.toDataURL(tonLink, (err, url) => {
     if (!err) {

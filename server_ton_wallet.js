@@ -35,6 +35,12 @@ async function getAddress() {
   return address.toString(true, true, false); // Non-bounceable base64
 }
 
+async function getAddressForWeb() {
+  await init();
+  const address = await wallet.getAddress();
+  return address.toString({ bounceable: false, urlSafe: true }); // ✅ Tonkeeper 可识别
+}
+
 // 获取当前余额（单位为 nanoTON）
 async function getBalance() {
   await init();

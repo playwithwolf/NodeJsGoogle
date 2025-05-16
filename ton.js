@@ -12,7 +12,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
   }));
 
-const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash , hexToBytes ,buildTonPaymentLink,getAddressForWeb,buildTonPaymentWebLink} =  require('./server_ton_wallet');
+const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash , hexToBytes ,buildTonPaymentLink,getAddressForWeb,buildTonPaymentTonhubLink,buildTonPaymentTonkeeperLink} =  require('./server_ton_wallet');
 const WalletClass = tonweb.wallet.all.v3R2;
 
 
@@ -524,7 +524,8 @@ router.post('/createTonPaymentLink', async (req, res) => {  //生成支付 二�
   const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
   console.log("amountNano = "+amountNano)
   const tonLink = buildTonPaymentLink(server_address, amountNano, orderId);
-  const weblink = buildTonPaymentWebLink(server_address, amountNano, orderId);
+  const tonhublink = buildTonPaymentTonhubLink(server_address, amountNano, orderId);
+  const Tonkeeperlink = buildTonPaymentTonkeeperLink(server_address, amountNano, orderId);
   console.log("tonLink = "+tonLink)
   QRCode.toDataURL(tonLink, (err, url) => {
     if (!err) {
@@ -532,7 +533,8 @@ router.post('/createTonPaymentLink', async (req, res) => {  //生成支付 二�
           res.status(200).json({
             success: true,
             url,
-            weblink
+            tonhublink,
+            Tonkeeperlink
           });
     }else{
         res.status(500).json({

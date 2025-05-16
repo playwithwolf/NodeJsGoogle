@@ -509,7 +509,7 @@ router.post('/sendTonToServerByPublicKey', async (req, res) => {
   try {
     const { orderId, publicKey, amountTON } = req.body;
 
-    if (!orderId || !userAddress || !amountTON  || !publicKey) {
+    if (!orderId || !publicKey || !amountTON  || !publicKey) {
       return res.status(400).json({
         error: '参数缺失',
         success: false,

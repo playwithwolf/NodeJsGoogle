@@ -286,6 +286,124 @@ try {
 });
 
 
+
+router.post('/serverSendTonByAddress', async (req, res) => {
+
+try {
+    const { orderId , userAddress , amountTON } = req.body;
+ 
+    if (!orderId || !userAddress || !amountTON) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, userAddress, amountTON
+      });
+    }
+
+    // console.log(`1`);
+    // const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    // console.log(`2`);
+    // const WalletClass = tonweb.wallet.all.v3R2;
+    // const userWallet = new WalletClass(tonweb.provider, {
+    //   publicKey: keyPair.publicKey,
+    //   wc: 0,
+    // });
+    //  console.log(`3`);
+    //  const useraddress = await userWallet.getAddress();
+    //  console.log(`4`);
+     const toAddressStr = new TonWeb.utils.Address(useraddress).toString(true, true, false);
+     //获得目标钱包初始余额
+     const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
+     const initBalanceNano = BigInt(initInfo.balance || 0n);
+
+
+     // 获取服务器钱包
+    const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+    // 获取服务器初始余额
+     const info = await tonweb.provider.getAddressInfo(server_addressStr);
+     const serverBalanceNano = BigInt(info.balance || 0n);
+
+     const transferAmountNano = BigInt(TonWeb.utils.toNano(amountTON.toString()));
+     const estimatedFeeNano = BigInt(TonWeb.utils.toNano('0.03'));  // 假设手续费为 0.03 TON
+
+     const requiredBalanceNano = transferAmountNano + estimatedFeeNano;
+
+     // 判断余额是否足够
+     if (serverBalanceNano < requiredBalanceNano) {
+        const currentBalanceTON = TonWeb.utils.fromNano(serverBalanceNano.toString());
+        const requiredBalanceTON = TonWeb.utils.fromNano(requiredBalanceNano.toString());
+
+        console.log(`[系统] 服务器钱包余额不足，无法完成转账（余额：${currentBalanceTON} TON，所需：${requiredBalanceTON} TON）`);
+
+        return res.status(400).json({
+          error: '服务器钱包余额不足，无法完成转账',
+          success: false,
+          currentBalance: currentBalanceTON,
+          requiredBalance: requiredBalanceTON
+        });
+     }
+
+
+    await sendTonHaveOrderId(useraddress, amountTON,orderId);
+    console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddressStr}  orderId:${orderId}`);
+
+    await delay(1000);
+    const expectAmountNano = BigInt(TonWeb.utils.toNano(amountTON.toString()));
+    const toleranceNano = BigInt(TonWeb.utils.toNano('0.001')); // 容差 0.001 TON
+
+    // 轮询到账
+    let isFunded = false;
+    for (let i = 0; i < 10; i++) {
+      const info = await tonweb.provider.getAddressInfo(toAddressStr);
+      const balanceNano = BigInt(info.balance || 0n);
+      const delta = balanceNano - initBalanceNano;
+
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
+
+      if (delta + toleranceNano >= expectAmountNano) {
+        isFunded = true;
+        break;
+      }
+
+      await new Promise(r => setTimeout(r, 5000)); // 每次等待 5 秒
+    }
+
+
+    if (!isFunded) {
+      return res.status(500).json({ 
+        error: '转账未到账，请稍后重试', 
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON,
+      });
+    }
+
+
+     res.status(200).json({
+      success: true,
+      orderId: orderId,
+      mnemonics: mnemonics,
+      amountTON: amountTON,
+   
+    });
+  } catch (error) {
+     console.error('[serverSendTon] 发生错误:', error);
+     res.status(500).json({ 
+      error: error.message || String(error),
+      success: false,
+      // orderId: orderId,
+      // mnemonics: mnemonics,
+      // amountTON: amountTON,
+
+     });
+  }
+
+});
+
+
 router.post('/sendTonToServer', async (req, res) => {
   try {
     const { orderId, mnemonics, amountTON } = req.body;
@@ -307,6 +425,107 @@ router.post('/sendTonToServer', async (req, res) => {
     });
 
     const client_address = await client_wallet.getAddress();
+    const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
+
+    const clientInfo = await tonweb.provider.getAddressInfo(clientAddressStr);
+    const clientBalance = BigInt(clientInfo.balance || 0n);
+
+    console.log('[debug] amountTON 类型:', typeof amountTON, amountTON);
+
+    // 转账金额和手续费统一使用 BigInt
+    const transferAmount = BigInt(TonWeb.utils.toNano(amountTON.toString()));
+    console.log('[debug] transferAmount:', transferAmount.toString());
+
+    const estimatedFee = BigInt(TonWeb.utils.toNano('0.03'));  // 保守估计手续费为 0.03 TON
+    const totalRequired = transferAmount + estimatedFee;
+
+    if (clientBalance < totalRequired) {
+      return res.status(400).json({
+        error: '钱包余额不足，无法完成转账（需包含手续费）',
+        success: false,
+        clientAddress: clientAddressStr,
+        currentBalanceTON: TonWeb.utils.fromNano(clientBalance),
+        requiredTON: TonWeb.utils.fromNano(totalRequired)
+      });
+    }
+
+    const server_address = await getAddress();
+    const server_addressStr = new TonWeb.utils.Address(server_address).toString(true, true, false);
+
+    // 获取服务器初始余额
+    const initInfo = await tonweb.provider.getAddressInfo(server_addressStr);
+    const initBalanceNano = BigInt(initInfo.balance || 0n);
+
+    // 发起转账
+    await sentClientTonHaveOrderId(client_wallet, amountTON, orderId, keyPair);
+    console.log(`[系统] 用户[${clientAddressStr}] 已向服务器地址[${server_addressStr}] 转入 ${amountTON} TON`);
+
+    // 轮询到账
+    const expectAmountNano = BigInt(TonWeb.utils.toNano(amountTON.toString()));
+    const tolerance = BigInt(TonWeb.utils.toNano('0.001'));  // 允许 0.001 TON 容差
+    let isFunded = false;
+
+    for (let i = 0; i < 10; i++) {
+      const info = await tonweb.provider.getAddressInfo(server_addressStr);
+      const balanceNano = BigInt(info.balance || 0n);
+      const delta = balanceNano - initBalanceNano;
+
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
+
+      if (delta >= expectAmountNano - tolerance) {
+        isFunded = true;
+        break;
+      }
+
+      await new Promise(r => setTimeout(r, 5000));
+    }
+
+
+    if (!isFunded) {
+      return res.status(500).json({
+        error: '转账未到账，请稍后重试',
+        success: false,
+        orderId, mnemonics, amountTON
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      orderId,
+      amountTON,
+      clientAddress: clientAddressStr
+    });
+  } catch (error) {
+    console.error('[serverSendTon] 发生错误:', error);
+    res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
+
+router.post('/sendTonToServerByAddress', async (req, res) => {
+  try {
+    const { orderId, client_address, amountTON } = req.body;
+
+    if (!orderId || !client_address || !amountTON) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, client_address, amountTON
+      });
+    }
+
+    // const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+
+    // const WalletClass = tonweb.wallet.all.v3R2;
+    // const client_wallet = new WalletClass(tonweb.provider, {
+    //   publicKey: keyPair.publicKey,
+    //   wc: 0
+    // });
+
+    // const client_address = await client_wallet.getAddress();
     const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
 
     const clientInfo = await tonweb.provider.getAddressInfo(clientAddressStr);

@@ -45,7 +45,9 @@ async function getAddressForWeb() {
 
   const coreAddress = Address.parse(friendlyAddress);
 
-  const finalAddress = coreAddress.toString({ bounceable: false, urlSafe: true }); // ✅ 0Q...
+  const isTestnet = process.env.TESTNET === 'true';
+
+  const finalAddress = coreAddress.toString({ bounceable: false, urlSafe: true , testOnly: isTestnet}); // ✅ 0Q...
 
   console.log("✅ Tonkeeper-compatible address: " + finalAddress);
 

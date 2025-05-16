@@ -666,4 +666,5 @@ module.exports = {
   getTransactionsInHash,
   hexToBytes,
   buildTonPaymentLink,
+  getAddressForWeb,
 };

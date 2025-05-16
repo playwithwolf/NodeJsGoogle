@@ -696,6 +696,11 @@ function buildTonPaymentLink(toAddress, amountTON, orderId) {
   return `ton://transfer/${toAddress}?amount=${amountTON}&text=${text}`;
 }
 
+function buildTonPaymentWebLink(toAddress, amountTON, orderId) {
+  const text = encodeURIComponent(`${orderId}`);
+  return `https://tonhub.com/transfer/${toAddress}?amount=${amountTON}&text=${text}`;
+}
+
 
 module.exports = {
   init,
@@ -713,4 +718,5 @@ module.exports = {
   hexToBytes,
   buildTonPaymentLink,
   getAddressForWeb,
+  buildTonPaymentWebLink,
 };

@@ -492,7 +492,20 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 20) {
   }
 }
 
+function parsePayloadFromBodyBase64(base64Body) {
+  if (!base64Body) return '';
 
+  try {
+    const buffer = Buffer.from(base64Body, 'base64');
+    const text = buffer.toString('utf-8');
+
+    // 尝试匹配可读字符串，比如 UUID、邮箱、标签等
+    const matches = text.match(/[a-zA-Z0-9\-_]{6,}/g);
+    return matches ? matches.join(' ') : '';
+  } catch (e) {
+    return '';
+  }
+}
 
 async function getTransactionsOutOrderId(serverAddress, orderId, limit = 20) {
   try {
@@ -525,14 +538,23 @@ async function getTransactionsOutOrderId(serverAddress, orderId, limit = 20) {
           payload = '';
         }
 
+        // let message = '';
+        // try {
+        //   message = Buffer.from(outMsg.message || '', 'base64').toString('utf-8');
+        // } catch {
+        //   message = outMsg.message || '';
+        // }
+        // message 解码（有时是 base64，有时是明文）
         let message = '';
         try {
-          message = Buffer.from(outMsg.message || '', 'base64').toString('utf-8');
+          message = safeDecodeBase64ToUtf8(outMsg.message || '');//.toString('utf-8');
         } catch {
-          message = outMsg.message || '';
+          message = inMsg.message || '';
         }
 
-        if (message.includes(orderId) || payload.includes(orderId)) {
+         const rawMessage = outMsg.message || '';
+
+        if (message.includes(orderId) || rawMessage.includes(orderId)  || payload.includes(orderId)) {
           filteredTransactions.push({
             hash: tx.transaction_id.hash,
             realHex: realHash,

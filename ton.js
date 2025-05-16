@@ -311,7 +311,7 @@ try {
     //  console.log(`3`);
     //  const useraddress = await userWallet.getAddress();
     //  console.log(`4`);
-     const toAddressStr = new TonWeb.utils.Address(useraddress).toString(true, true, false);
+     const toAddressStr = new TonWeb.utils.Address(userAddress).toString(true, true, false);
      //获得目标钱包初始余额
      const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
      const initBalanceNano = BigInt(initInfo.balance || 0n);

@@ -509,7 +509,7 @@ router.post('/createTonPaymentLink', async (req, res) => {
 
    const { orderId, amountTON } = req.body;
 
-    if (!orderId || !mnemonics || !amountTON) {
+    if (!orderId  || !amountTON) {
       return res.status(400).json({
         error: '参数缺失',
         success: false,

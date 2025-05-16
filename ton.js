@@ -545,25 +545,40 @@ router.post('/createTonPaymentLink', async (req, res) => {
 router.post('/checkTonPaymentLink', async (req, res) => {
   try {
     const { orderId, expectedTON } = req.body;
-    const serverAddress = await getAddress(); // 收款地址
+
+    if (!orderId || !expectedTON) {
+      return res.status(400).json({ success: false, error: '参数缺失', orderId, expectedTON });
+    }
+
+    const serverAddress = await getAddress();
+    console.log('[CHECK] Server Address:', serverAddress);
+
     const txList = await tonweb.provider.getTransactions(serverAddress);
+
+    const expectedNano = TonWeb.utils.toNano(expectedTON.toString());
+    console.log('[CHECK] Expecting >=', expectedNano.toString(), 'nano TON');
 
     for (const tx of txList) {
       const msg = tx.in_msg?.message || '';
       const amountNano = BigInt(tx.in_msg?.value || 0);
-      const expectedNano = BigInt(TonWeb.utils.toNano(expectedTON));
 
-      if (msg.includes(orderId) && amountNano >= expectedNano) {
+      console.log('[TX] Amount:', amountNano.toString(), 'Msg:', msg);
+
+      if (msg.includes(orderId) && amountNano >= BigInt(expectedNano)) {
         return res.json({ success: true, paid: true });
       }
     }
+
     return res.json({ success: true, paid: false });
+
   } catch (error) {
-    console.error('查询交易出错:', error);
-    return res.status(500).json({ success: false, error: error.message || String(error) });
+    console.error('[ERROR] 查询交易出错:', error);
+    return res.status(500).json({
+      success: false,
+      error: error?.message || String(error)
+    });
   }
 });
-
 
 router.post('/getTransactionsInOrderId', async (req, res) => {
   try {

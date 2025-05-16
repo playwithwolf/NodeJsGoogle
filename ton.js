@@ -516,10 +516,19 @@ router.post('/sendTonToServerByPublicKey', async (req, res) => {
         orderId,  amountTON, publicKey
       });
     }
+    console.log("publicKey = "+publicKey)
+    const cleanedPublicKey = publicKey.toLowerCase().replace(/^0x/, '');
+
+    if (!/^[0-9a-f]{64}$/.test(cleanedPublicKey)) {
+      return res.status(400).json({
+        error: '无效的 publicKey 格式，必须是64位十六进制字符串',
+        success: false
+      });
+    }
     
     const WalletClass = tonweb.wallet.all.v3R2;
     const client_wallet = new WalletClass(tonweb.provider, {
-      publicKey: publicKey,
+      publicKey: cleanedPublicKey,
       wc: 0
     });
 

@@ -586,7 +586,7 @@ router.post('/sendTonToServerByAddress', async (req, res) => {
       return res.status(500).json({
         error: '转账未到账，请稍后重试',
         success: false,
-        orderId, mnemonics, amountTON
+        orderId, client_address, amountTON
       });
     }
 
@@ -594,7 +594,7 @@ router.post('/sendTonToServerByAddress', async (req, res) => {
       success: true,
       orderId,
       amountTON,
-      clientAddress: clientAddressStr
+      client_address
     });
   } catch (error) {
     console.error('[serverSendTon] 发生错误:', error);

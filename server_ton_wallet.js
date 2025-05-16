@@ -440,8 +440,8 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 20) {
         message = inMsg.message || '';
       }
 
-      // console.log('✔️ 解码后的 Message:', message);
-      // console.log('✔️ 解码后的 Payload:', payload);
+      console.log('✔️ 解码后的 Message:', message);
+      console.log('✔️ 解码后的 Payload:', payload);
 
       return message.includes(orderId) || payload.includes(orderId);
     });

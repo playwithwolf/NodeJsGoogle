@@ -28,9 +28,9 @@ function generateSignature(appId, session, uid, appSecret) {
 async function validateMiSession(appId, appSecret, session, uid) {
   const signature = generateSignature(appId, session, uid, appSecret);
 
-  const url = 'https://mis.migc.xiaomi.com/api/biz/service/loginvalidate';
+  const url = "https://mis.migc.xiaomi.com/api/biz/service/loginvalidate";
   const headers = {
-    'Content-Type' 'applicationx-www-form-urlencoded',
+    "Content-Type": "applicationx-www-form-urlencoded",
   };
   const data = qs.stringify({
     appId,

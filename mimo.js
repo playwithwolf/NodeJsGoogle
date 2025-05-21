@@ -28,7 +28,7 @@ function generateSignature(appId, session, uid, appSecret) {
  
 async function validateMiSession(appId, appSecret, session, uid) {
   const signature = generateSignature(appId, session, uid, appSecret);
-
+  console.log("signature = "+signature)
   const url = "https://mis.migc.xiaomi.com/api/biz/service/loginvalidate";
   const headers = {
     "Content-Type": "applicationx-www-form-urlencoded",
@@ -61,6 +61,11 @@ router.post('/mimoSessionVerify', async (req, res) => {
     console.log('Request body:', req.body);
     
     const { t3token, t3userid, appId, appSecret } = req.body;
+
+    console.log(t3token)
+    console.log(t3userid)
+    console.log(appId)
+    console.log(appSecret)
 
     return await validateMiSession(appId, appSecret, t3token, t3userid);
 

@@ -11,7 +11,7 @@ const crypto = require('crypto');
 //   @returns {string}
  
 function generateSignature(appId, session, uid, appSecret) {
-   按 key 字典序拼接
+  //  按 key 字典序拼接
   const paramStr = `appId=${appId}&session=${session}&uid=${uid}`;
   const raw = paramStr + appSecret;
 

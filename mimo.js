@@ -1,7 +1,8 @@
 const axios = require('axios');
 const qs = require('qs');
 const crypto = require('crypto');
-
+const express = require('express');
+const router = express.Router();
 
 //   生成签名
 //   @param {string} appId 

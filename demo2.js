@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const myRouter = require('./ton.js');
 const myRouter2 = require('./mimo.js');
 const myRouter3 = require('./mimoiapcallback.js');
+const myRouter4 = require('./xiaomiWebhook.js');
 const app = express();  
 const port = 80;  
 app.use(cors());
@@ -15,6 +16,7 @@ app.use(bodyParser.urlencoded({ extended: true })); // 解析URL编码的请求�
 app.use(myRouter);
 app.use(myRouter2);
 app.use(myRouter3);
+app.use(myRouter4);
 app.listen(port, () => {  
     console.log('baijie Server running');  
 });  

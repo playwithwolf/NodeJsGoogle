@@ -32,7 +32,7 @@ router.post('/vivocnPayNotify', async (req, res) => {
   if (!cpOrderNumber || !orderAmount) {
     return res.status(400).send('Missing required parameters: cpOrderNumber or orderAmount');
   }
-
+  console.log(req.body)
   // 构建请求参数
   const params = {
     version: config.version,

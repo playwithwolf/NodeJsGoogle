@@ -10,9 +10,9 @@ const VIVO_QUERY_URL = 'https://pay.vivo.com.cn/vcoin/queryv2';
 
 // Vivo接口配置（请替换为你自己的）
 const config = {
-  appId: 'YOUR_APP_ID',
-  cpId: 'YOUR_CP_ID',
-  appKey: 'YOUR_APP_KEY', // 用于签名
+  appId: '105909218',
+  cpId: 'eaf85afaa4a380ce7732',
+  appKey: 'c81ceaeebcf35a8bffa6ac1089976874', // 用于签名
   version: '1.0.0',
   signMethod: 'MD5',
 };

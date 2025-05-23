@@ -17,14 +17,39 @@ const config = {
   signMethod: 'MD5',
 };
 
-// 生成签名方法
-function generateSignature(params, appKey) {
-  const sortedKeys = Object.keys(params).sort();
-  const paramStr = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
-  const md5 = crypto.createHash('md5');
-  const rawStr = paramStr + '&' + crypto.createHash('md5').update(appKey).digest('hex').toLowerCase();
-  return md5.update(rawStr).digest('hex').toLowerCase();
+/**
+ * 生成 vivo 接口签名
+ * @param {Object} rawParams - 请求参数（不含 signMethod 和 signature）
+ * @param {string} appKey - 合作密钥
+ * @returns {string} 签名字符串（小写）
+ */
+function generateVivoSignature(rawParams, appKey) {
+  // 1. 移除空值字段（空字符串、null、undefined）
+  const filtered = {};
+  for (const key in rawParams) {
+    if (rawParams[key] !== null && rawParams[key] !== '' && rawParams[key] !== undefined) {
+      filtered[key] = rawParams[key];
+    }
+  }
+
+  // 2. 按 key 升序排序
+  const sortedKeys = Object.keys(filtered).sort();
+
+  // 3. 拼接为 key=value&...
+  const paramStr = sortedKeys.map(key => `${key}=${filtered[key]}`).join('&');
+
+  // 4. 计算 appKey 的 md5 小写
+  const appKeyMd5 = crypto.createHash('md5').update(appKey).digest('hex').toLowerCase();
+
+  // 5. 拼接最终签名字符串
+  const fullStr = `${paramStr}&${appKeyMd5}`;
+
+  // 6. 最终 md5 签名
+  const signature = crypto.createHash('md5').update(fullStr).digest('hex').toLowerCase();
+
+  return signature;
 }
+
 
 router.post('/vivocnPayNotify', async (req, res) => {
   const { cpOrderNumber, orderAmount, orderNumber } = req.body;

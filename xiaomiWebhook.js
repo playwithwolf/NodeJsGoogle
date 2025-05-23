@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const receivedTokens = new Set();
 
-const { callXiaomiAPI } = require('./xiaomiClient'); // 使用 ESModule 需用 import；CommonJS 用 require + babel 支持或改为 .mjs
+const { callXiaomiAPI } = require('./xiaomiClient'); // ✅ CommonJS 正确引入
 
 router.post('/xiaomiwebhook', async (req, res) => {
   const { message } = req.body;

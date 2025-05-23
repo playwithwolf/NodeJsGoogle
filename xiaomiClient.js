@@ -28,10 +28,10 @@ function createSignature(method, contentType, nonce, requestPath, body) {
   hmac.update(signStr, 'utf8');
   const signature = hmac.digest('base64');
 
-  return { signature, contentMd5, signStr };
+  return { signature, contentMd5 };
 }
 
-export async function callXiaomiAPI(method, urlPathTemplate, token, productId, body = null) {
+async function callXiaomiAPI(method, urlPathTemplate, token, productId, body = null) {
   const region = token.substring(1, 3);
   const contentType = 'application/json';
   const nonce = uuidv4();
@@ -66,5 +66,10 @@ export async function callXiaomiAPI(method, urlPathTemplate, token, productId, b
     headers,
     data: bodyStr,
   });
+
   return response.data;
 }
+
+module.exports = {
+  callXiaomiAPI,
+};

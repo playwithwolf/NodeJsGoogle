@@ -61,7 +61,6 @@ router.post('/vivocnPayNotify', async (req, res) => {
   // 构建请求参数
   const params = {
     version: config.version,
-    signMethod: config.signMethod,
     appId: config.appId,
     cpId: config.cpId,
     cpOrderNumber,

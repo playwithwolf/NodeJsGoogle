@@ -50,9 +50,9 @@ router.post('/vivoverify', async (req, res) => {
   }
 
   if (verified) {
-    return res.send('valid');
+    return res.send('valid 验证通过');
   } else {
-    return res.status(401).send('invalid');
+    return res.status(401).send('invalid 验证失败');
   }
 });
 

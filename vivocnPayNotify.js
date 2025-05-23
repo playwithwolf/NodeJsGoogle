@@ -73,7 +73,10 @@ router.post('/vivocnPayNotify', async (req, res) => {
   }
 
   // 生成签名
-  params.signature = generateSignature(params, config.appKey);
+  const rawSignature = generateVivoSignature(params, config.appKey);
+  console.log('签名前参数：', params);
+  console.log('生成签名：', rawSignature);
+  params.signature = rawSignature; params.signature = generateVivoSignature(params, config.appKey);
 
   try {
     const response = await axios.post(VIVO_QUERY_URL, qs.stringify(params), {

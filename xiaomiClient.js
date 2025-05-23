@@ -1,7 +1,7 @@
 // xiaomiClient.js
-import axios from 'axios';
-import crypto from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
+const axios = require('axios');
+const crypto = require('crypto');
+const { v4: uuidv4 } = require('uuid');
 
 const appId = '2882303761522303522';
 const appSecret = 'fk74Ehay6peS0X8tV595cg==';

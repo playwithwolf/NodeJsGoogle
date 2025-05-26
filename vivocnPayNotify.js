@@ -100,14 +100,14 @@ router.post('/vivocnPayNotify', async (req, res) => {
 
     if (result.respCode === '200' && result.tradeStatus === '0000') {
       console.log(`✅ 查询成功：订单已支付`);
-      return res.json({ status: 'success', data: result });
+      return res.status(200).send('success');
     } else {
       console.warn('⚠️ 查询结果异常:', result);
-      return res.json({ status: 'fail', data: result });
+      return res.status(200).send('fail');
     }
   } catch (error) {
     console.error('❌ 请求失败:', error.message);
-    return res.status(500).send('Server error');
+    return res.status(200).send('fail');
   }
 });
 

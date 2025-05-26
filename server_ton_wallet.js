@@ -54,6 +54,32 @@ async function getAddressForWeb() {
   return finalAddress;
 }
 
+
+async function getAddressForWebByMnemonics(mnemonics) {
+  const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+  console.log(`2`);
+  const WalletClass = tonweb.wallet.all.v3R2;
+  const userWallet = new WalletClass(tonweb.provider, {
+      publicKey: keyPair.publicKey,
+      wc: 0,
+  });
+  console.log(`3`);
+  const rawAddress = await userWallet.getAddress();
+ 
+  const tonwebAddress = new TonWeb.utils.Address(rawAddress);
+  const friendlyAddress = tonwebAddress.toString(true, true, false); // EQ...
+
+  const coreAddress = Address.parse(friendlyAddress);
+
+  const isTestnet = process.env.TESTNET === 'true';
+
+  const finalAddress = coreAddress.toString({ bounceable: false, urlSafe: true , testOnly: isTestnet}); // ✅ 0Q...
+
+  console.log("✅ Tonkeeper-compatible address: " + finalAddress);
+
+  return finalAddress;
+}
+
 // 获取当前余额（单位为 nanoTON）
 async function getBalance() {
   await init();
@@ -725,4 +751,5 @@ module.exports = {
   getAddressForWeb,
   buildTonPaymentTonhubLink,
   buildTonPaymentTonkeeperLink,
+  getAddressForWebByMnemonics,
 };

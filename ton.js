@@ -12,7 +12,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
   }));
 
-const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash , hexToBytes ,buildTonPaymentLink,getAddressForWeb,buildTonPaymentTonhubLink,buildTonPaymentTonkeeperLink} =  require('./server_ton_wallet');
+const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash , hexToBytes ,buildTonPaymentLink,getAddressForWeb,buildTonPaymentTonhubLink,buildTonPaymentTonkeeperLink,getAddressForWebByMnemonics} =  require('./server_ton_wallet');
 const WalletClass = tonweb.wallet.all.v3R2;
 
 
@@ -681,12 +681,12 @@ router.post('/getTransactionsInHash', async (req, res) => {  //通过网站上�
 
 
 
-router.post('/AppTonSendTonByAddress', async (req, res) => {      //从服务器给传递的地址转账 参数是目标钱包的助记词
+router.post('/AppTonSendTonByAddress', async (req, res) => {      //从APP下带有助记词的钱包给传递的地址转账 参数是目标钱包的助记词
 
 try {
     const { orderId , mnemonics , amountTON, toAddress } = req.body;
  
-    if (!orderId || !mnemonics || !amountTON) {
+    if (!orderId || !mnemonics || !amountTON || !toAddress) {
       return res.status(400).json({
         error: '参数缺失',
         success: false,
@@ -809,6 +809,44 @@ try {
 });
 
 
+router.post('/createAppTonPaymentLinkByMnemonics', async (req, res) => {  //生成支付 二维码  
 
+   const { orderId, mnemonics, amountTON } = req.body;
+
+    if (!orderId  || !amountTON || !mnemonics) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, amountTON
+      });
+    }
+  const to_address = await getAddressForWebByMnemonics(mnemonics);
+  // const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
+  //const toAddress = Address.parse(server_address).toString({ urlSafe: true, bounceable: false });
+  console.log("to_address = "+to_address)
+  const amountNano = BigInt(Math.floor(parseFloat(amountTON) * 1e9));
+  console.log("amountNano = "+amountNano)
+  const tonLink = buildTonPaymentLink(to_address, amountNano, orderId);
+  const tonhublink = buildTonPaymentTonhubLink(to_address, amountNano, orderId);
+  const Tonkeeperlink = buildTonPaymentTonkeeperLink(to_address, amountNano, orderId);
+  console.log("tonLink = "+tonLink)
+  QRCode.toDataURL(tonLink, (err, url) => {
+    if (!err) {
+      // 展示 base64 图像
+          res.status(200).json({
+            success: true,
+            url,
+            tonhublink,
+            Tonkeeperlink
+          });
+    }else{
+        res.status(500).json({
+          error: error.message || String(error),
+          success: false
+        });
+    } 
+  });
+
+});
 
 module.exports = router;

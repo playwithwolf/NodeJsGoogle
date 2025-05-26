@@ -681,4 +681,134 @@ router.post('/getTransactionsInHash', async (req, res) => {  //通过网站上�
 
 
 
+router.post('/AppTonSendTonByAddress', async (req, res) => {      //从服务器给传递的地址转账 参数是目标钱包的助记词
+
+try {
+    const { orderId , mnemonics , amountTON, toAddress } = req.body;
+ 
+    if (!orderId || !mnemonics || !amountTON) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, mnemonics, amountTON
+      });
+    }
+
+    console.log(`1`);
+    // const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    // console.log(`2`);
+    // const WalletClass = tonweb.wallet.all.v3R2;
+    // const userWallet = new WalletClass(tonweb.provider, {
+    //   publicKey: keyPair.publicKey,
+    //   wc: 0,
+    // });
+    //  console.log(`3`);
+    //  const fromuseraddress = await userWallet.getAddress();
+    //  console.log(`4`);
+     const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, true, false);
+     //获得目标钱包初始余额
+     const initInfo = await tonweb.provider.getAddressInfo(toAddressStr);
+     const initBalanceNano = BigInt(initInfo.balance || 0n);
+
+
+     // 获取APP钱包
+    console.log(`1`);
+    const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    console.log(`2`);
+    const WalletClass = tonweb.wallet.all.v3R2;
+    const userWallet = new WalletClass(tonweb.provider, {
+      publicKey: keyPair.publicKey,
+      wc: 0,
+    });
+     console.log(`3`);
+     const fromuseraddress = await userWallet.getAddress();
+
+ 
+    const from_addressStr = new TonWeb.utils.Address(fromuseraddress).toString(true, true, false);
+
+    // 获取服务器初始余额
+     const info = await tonweb.provider.getAddressInfo(from_addressStr);
+     const fromBalanceNano = BigInt(info.balance || 0n);
+
+     const transferAmountNano = BigInt(TonWeb.utils.toNano(amountTON.toString()));
+     const estimatedFeeNano = BigInt(TonWeb.utils.toNano('0.03'));  // 假设手续费为 0.03 TON
+
+     const requiredBalanceNano = transferAmountNano + estimatedFeeNano;
+
+     // 判断APP钱包余额是否足够
+     if (fromBalanceNano < requiredBalanceNano) {
+        const currentBalanceTON = TonWeb.utils.fromNano(fromBalanceNano.toString());
+        const requiredBalanceTON = TonWeb.utils.fromNano(requiredBalanceNano.toString());
+
+        console.log(`[系统] APP钱包余额不足，无法完成转账（余额：${currentBalanceTON} TON，所需：${requiredBalanceTON} TON）`);
+
+        return res.status(400).json({
+          error: 'APP钱包余额不足，无法完成转账',
+          success: false,
+          currentBalance: currentBalanceTON,
+          requiredBalance: requiredBalanceTON
+        });
+     }
+
+
+    await sendTonHaveOrderId(toAddress, amountTON,orderId);
+    console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddress}  orderId:${orderId}`);
+
+    await delay(1000);
+    const expectAmountNano = BigInt(TonWeb.utils.toNano(amountTON.toString()));
+    const toleranceNano = BigInt(TonWeb.utils.toNano('0.001')); // 容差 0.001 TON
+
+    // 轮询到账
+    let isFunded = false;
+    for (let i = 0; i < 10; i++) {
+      const info = await tonweb.provider.getAddressInfo(toAddressStr);
+      const balanceNano = BigInt(info.balance || 0n);
+      const delta = balanceNano - initBalanceNano;
+
+      console.log(`[系统] 第 ${i + 1} 次轮询，余额: ${balanceNano}，增加: ${delta} nanoTON`);
+
+      if (delta + toleranceNano >= expectAmountNano) {
+        isFunded = true;
+        break;
+      }
+
+      await new Promise(r => setTimeout(r, 5000)); // 每次等待 5 秒
+    }
+
+
+    if (!isFunded) {
+      return res.status(500).json({ 
+        error: '转账未到账，请稍后重试', 
+        success: false,
+        orderId: orderId,
+        mnemonics: mnemonics,
+        amountTON: amountTON,
+      });
+    }
+
+
+     res.status(200).json({
+      success: true,
+      orderId: orderId,
+      mnemonics: mnemonics,
+      amountTON: amountTON,
+   
+    });
+  } catch (error) {
+     console.error('[AppTonSendTonByAddress] 发生错误:', error);
+     res.status(500).json({ 
+      error: error.message || String(error),
+      success: false,
+      // orderId: orderId,
+      // mnemonics: mnemonics,
+      // amountTON: amountTON,
+
+     });
+  }
+
+});
+
+
+
+
 module.exports = router;

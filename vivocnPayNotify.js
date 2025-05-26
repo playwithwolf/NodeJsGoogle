@@ -18,37 +18,35 @@ const config = {
 };
 
 /**
- * 生成 vivo 接口签名
- * @param {Object} rawParams - 请求参数（不含 signMethod 和 signature）
- * @param {string} appKey - 合作密钥
- * @returns {string} 签名字符串（小写）
+ * 生成 vivo 查询接口签名
+ * @param {Object} params 需要签名的参数（不包含 signMethod 和 signature）
+ * @param {string} appKey 合作密钥
+ * @returns {string} MD5 签名（小写）
  */
-function generateVivoSignature(rawParams, appKey) {
-  // 1. 移除空值字段（空字符串、null、undefined）
+function generateVivoSignature(params, appKey) {
+  // 1. 过滤空值
   const filtered = {};
-  for (const key in rawParams) {
-    if (rawParams[key] !== null && rawParams[key] !== '' && rawParams[key] !== undefined) {
-      filtered[key] = rawParams[key];
+  for (const key in params) {
+    const value = params[key];
+    if (value !== '' && value !== null && value !== undefined) {
+      filtered[key] = value;
     }
   }
 
   // 2. 按 key 升序排序
   const sortedKeys = Object.keys(filtered).sort();
-
-  // 3. 拼接为 key=value&...
   const paramStr = sortedKeys.map(key => `${key}=${filtered[key]}`).join('&');
 
-  // 4. 计算 appKey 的 md5 小写
+  // 3. 对 appKey 做 MD5 并转小写
   const appKeyMd5 = crypto.createHash('md5').update(appKey).digest('hex').toLowerCase();
 
-  // 5. 拼接最终签名字符串
-  const fullStr = `${paramStr}&${appKeyMd5}`;
+  // 4. 拼接签名字符串
+  const signString = `${paramStr}&${appKeyMd5}`;
 
-  // 6. 最终 md5 签名
-  const signature = crypto.createHash('md5').update(fullStr).digest('hex').toLowerCase();
-
-  return signature;
+  // 5. 对拼接字符串做 MD5 签名
+  return crypto.createHash('md5').update(signString, 'utf-8').digest('hex').toLowerCase();
 }
+
 
 
 router.post('/vivocnPayNotify', async (req, res) => {
@@ -57,18 +55,31 @@ router.post('/vivocnPayNotify', async (req, res) => {
   if (!cpOrderNumber || !orderAmount) {
     return res.status(400).send('Missing required parameters: cpOrderNumber or orderAmount');
   }
-  console.log(req.body)
-  // 构建请求参数
-  const params = {
+ // console.log(req.body)
+ 
+   // 构建签名参数（仅包含用于签名的字段）
+  const signParams = {
     version: config.version,
     appId: config.appId,
     cpId: config.cpId,
     cpOrderNumber,
-    orderNumber,
     orderAmount,
   };
+  if (orderNumber) {
+    signParams.orderNumber = orderNumber;
+  }
+  // 生成签名
+  console.log(" signParams = "+signParams);
+  const signature = generateVivoSignature(signParams, config.appKey);
+  console.log(" signature = "+signature);
 
-  
+  // 最终请求参数（添加 signature 和 signMethod）
+  const requestParams = {
+    ...signParams,
+    signature,
+    signMethod: config.signMethod,
+  };
+
 
 
   // if (orderNumber) {
@@ -76,13 +87,9 @@ router.post('/vivocnPayNotify', async (req, res) => {
   // }
 
   // 生成签名
-  const rawSignature = generateVivoSignature(params, config.appKey);
-  console.log('签名前参数：', params);
-  console.log('生成签名：', rawSignature);
-  params.signature = rawSignature; params.signature = generateVivoSignature(params, config.appKey);
-  params.signMethod="MD5";
+ 
   try {
-    const response = await axios.post(VIVO_QUERY_URL, qs.stringify(params), {
+    const response = await axios.post(VIVO_QUERY_URL, qs.stringify(requestParams), {
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
         'Accept-Language': 'zh-CN,zh;q=0.9',

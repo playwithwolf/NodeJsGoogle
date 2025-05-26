@@ -652,7 +652,7 @@ router.post('/getTransactionsInHash', async (req, res) => {  //通过网站上�
     const { hash , amount, time ,timezoneOffset } = req.body;
 
 
-    if (!hash || !amount || !time || !timezoneOffset) {
+    if (!hash || !amount || !time || !timezoneOffset) {   //timezoneOffset "+08:00"
       return res.status(400).json({
         error: '参数缺失',
         success: false,

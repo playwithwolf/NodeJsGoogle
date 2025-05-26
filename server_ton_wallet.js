@@ -659,7 +659,8 @@ async function getTransactionsInHash(serverAddress,amount, client_hash, time,tim
  * @param {number} utime 交易时间戳，单位秒
  * @param {string} targetTimeStr 目标时间字符串，格式 "YYYY/MM/DD HH:mm:ss"
  * @param {number} toleranceSeconds 允许误差秒数，默认60秒
- * @returns {boolean} 是否在误差范围内
+ * @returns {boolean} 是否在误差范围内   
+ * "+08:00"
  */
 function isUtimeCloseToTarget(utime, targetTimeStr, timezoneOffset, toleranceSeconds = 60) {
   // 兼容 "2025/5/14 19:38:49" -> "2025-05-14T19:38:49"

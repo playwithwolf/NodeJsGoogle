@@ -98,6 +98,9 @@ router.post('/vivocnPayNotify', async (req, res) => {
 
     const result = response.data;
 
+
+    ///其他逻辑 要回给 success 就表示成功了
+
     if (result.respCode === '200' && result.tradeStatus === '0000') {
       console.log(`✅ 查询成功：订单已支付`);
       return res.status(200).send('success');

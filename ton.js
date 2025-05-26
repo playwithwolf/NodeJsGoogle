@@ -849,4 +849,36 @@ router.post('/createAppTonPaymentLinkByMnemonics', async (req, res) => {  //生�
 
 });
 
+
+router.post('/getTransactionsInOrderIdByMnemonics', async (req, res) => {  //通过订单号查询服务器转入 成功和信息
+  try {
+    const { orderId,mnemonics } = req.body;
+
+
+    if (!orderId || !mnemonics) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, mnemonics
+      });
+    }
+
+    const to_address = await getAddressForWebByMnemonics(mnemonics);
+    const to_addressStr = new TonWeb.utils.Address(to_address).toString(true, true, false);
+
+    const transactions = await getTransactionsInOrderId(to_addressStr, orderId);
+
+    return res.status(200).json({
+      success: true,
+      transactions
+    });
+  } catch (error) {
+    console.error('[getTransactionsForOrderId] 发生错误:', error);
+    return res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
 module.exports = router;

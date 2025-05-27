@@ -881,6 +881,37 @@ router.post('/getTransactionsInOrderIdByMnemonics', async (req, res) => {  //通
   }
 });
 
+
+router.post('/getTransactionsInOrderIdByAddress', async (req, res) => {  //通过订单号查询服务器转入 成功和信息
+  try {
+    const { orderId, toaddress } = req.body;
+
+
+    if (!orderId || ! toaddress) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, toaddress
+      });
+    }
+ 
+    const to_addressStr = new TonWeb.utils.Address(toaddress).toString(true, true, false);
+
+    const transactions = await getTransactionsInOrderId(to_addressStr, orderId);
+
+    return res.status(200).json({
+      success: true,
+      transactions
+    });
+  } catch (error) {
+    console.error('[getTransactionsForOrderId] 发生错误:', error);
+    return res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
 router.post('/getTransactionsInHashByMnemonics', async (req, res) => {  //通过网站上显示的 trace ID的 hash 查询服务器转入 成功和信息
   try {
     const { hash , amount, time ,timezoneOffset, mnemonics} = req.body;

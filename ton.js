@@ -959,7 +959,7 @@ router.post('/getTransactionsOutOrderOutByMnemonics', async (req, res) => {  //é
  
     const from_address = await getAddressForWebByMnemonics(mnemonics);
  
-    const from_addressStr = new TonWeb.utils.Address(from_address).toString(true, true, true);
+    const from_addressStr = new TonWeb.utils.Address(from_address).toString(true, true, false);
     console.log(from_addressStr)
     const transactions = await getTransactionsOutOrderId(from_addressStr, orderId);
 

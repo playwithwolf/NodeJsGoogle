@@ -690,7 +690,7 @@ try {
       return res.status(400).json({
         error: '参数缺失',
         success: false,
-        orderId, mnemonics, amountTON
+        orderId, mnemonics, amountTON, toAddress
       });
     }
 
@@ -943,6 +943,38 @@ router.post('/getTransactionsOutOrderIdByAddress', async (req, res) => {  //通�
   }
 });
 
+
+router.post('/getTransactionsOutOrderOutByMnemonics', async (req, res) => {  //通过订单号查询服务器转入 成功和信息
+  try {
+    const { orderId, mnemonics } = req.body;
+
+
+    if (!orderId || ! mnemonics) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, mnemonics
+      });
+    }
+ 
+    const from_address = await getAddressForWebByMnemonics(mnemonics);
+    const from_addressStr = new TonWeb.utils.Address(from_address).toString(true, true, false);
+
+    const transactions = await getTransactionsOutOrderId(from_addressStr, orderId);
+
+    return res.status(200).json({
+      success: true,
+      transactions
+    });
+  } catch (error) {
+    console.error('[getTransactionsForOrderId] 发生错误:', error);
+    return res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
 router.post('/getTransactionsInHashByMnemonics', async (req, res) => {  //通过网站上显示的 trace ID的 hash 查询服务器转入 成功和信息
   try {
     const { hash , amount, time ,timezoneOffset, mnemonics} = req.body;
@@ -973,6 +1005,8 @@ router.post('/getTransactionsInHashByMnemonics', async (req, res) => {  //通过
     });
   }
 });
+
+
 
 
 

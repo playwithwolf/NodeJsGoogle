@@ -261,12 +261,80 @@ async function sendTonHaveOrderId(toAddress, amountTON, orderId) {
     throw new Error('服务器钱包转账失败: ' + err.message);
   }
 }
-
-
+ 
 async function sentClientTonHaveOrderId(client_wallet, amountTON, orderId, keyPair) {
   await init(); // 初始化 tonweb/provider/server 钱包等
 
   const toAddress = await getAddress();
+  const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, true, false);
+
+  const client_address = await client_wallet.getAddress();
+  const clientAddressStr = new TonWeb.utils.Address(client_address).toString(true, true, false);
+
+  // 确保客户端钱包已经部署
+  const clientInfo = await tonweb.provider.getAddressInfo(clientAddressStr);
+  if (clientInfo.state !== 'active') {
+    throw new Error(`[${clientAddressStr}] 客户端钱包尚未部署，不能转账`);
+  }
+
+  // 获取最新 seqno
+  const seqno = await client_wallet.methods.seqno().call();
+  const amountNano = TonWeb.utils.toNano(amountTON.toString());
+
+  console.log(`[${clientAddressStr}] 正在向服务器转账 ${amountTON} TON，seqno=${seqno}`);
+
+  const payloadCell = new TonWeb.boc.Cell();
+  payloadCell.bits.writeString(orderId);
+
+  const sendTransaction_client = async () => {
+    return await client_wallet.methods.transfer({
+      secretKey: keyPair.secretKey,
+      toAddress: toAddressStr,
+      amount: amountNano,
+      seqno: seqno,
+      payload: payloadCell,
+      message: orderId,
+      sendMode: 3
+    }).send();
+  };
+
+  let retries = 0;
+  const maxRetries = 5;
+  const delayTime = 5000;
+  let result;
+
+  while (retries < maxRetries) {
+    try {
+      result = await sendTransaction_client();
+      console.log(`[${clientAddressStr}] 转账请求:`, result);
+
+      if (result && result['@type'] === 'ok') {
+        console.log(`[${clientAddressStr}] 转账请求发送成功`);
+        break;
+      }
+    } catch (err) {
+      console.error(`[${clientAddressStr}] 转账异常:`, err);
+
+      if (typeof err?.message === 'string' && err.message.includes('Ratelimit exceed')) {
+        console.warn(`[${clientAddressStr}] 遇到速率限制，等待重试...`);
+      } else {
+        throw new Error(`[${clientAddressStr}] 转账失败: ${err?.message || String(err)}`);
+      }
+    }
+
+    retries++;
+    if (retries >= maxRetries) {
+      throw new Error(`[${clientAddressStr}] 达到最大重试次数，仍然无法发送交易`);
+    }
+
+    await new Promise(r => setTimeout(r, delayTime));
+  }
+}
+
+
+async function sentClientTonToAdressHaveOrderId(client_wallet,toAddress, amountTON, orderId, keyPair) {
+   
+ 
   const toAddressStr = new TonWeb.utils.Address(toAddress).toString(true, true, false);
 
   const client_address = await client_wallet.getAddress();
@@ -753,4 +821,5 @@ module.exports = {
   buildTonPaymentTonhubLink,
   buildTonPaymentTonkeeperLink,
   getAddressForWebByMnemonics,
+  sentClientTonToAdressHaveOrderId,
 };

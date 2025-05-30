@@ -12,7 +12,7 @@ const tonweb = new TonWeb(new TonWeb.HttpProvider(process.env.TESTNET_TON_API,{
     apiKey: process.env.TESTNET_API_KEY
   }));
 
-const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash , hexToBytes ,buildTonPaymentLink,getAddressForWeb,buildTonPaymentTonhubLink,buildTonPaymentTonkeeperLink,getAddressForWebByMnemonics} =  require('./server_ton_wallet');
+const { sendTon , sendTonHaveOrderId, getAddress, sentClientTonHaveOrderId , getTransactionsInOrderId, getTransactionsOutOrderId, getTransactionsInHash , hexToBytes ,buildTonPaymentLink,getAddressForWeb,buildTonPaymentTonhubLink,buildTonPaymentTonkeeperLink,getAddressForWebByMnemonics,sentClientTonToAdressHaveOrderId} =  require('./server_ton_wallet');
 const WalletClass = tonweb.wallet.all.v3R2;
 
 
@@ -751,7 +751,7 @@ try {
      }
 
 
-    await sendTonHaveOrderId(toAddress, amountTON,orderId);
+    await sentClientTonToAdressHaveOrderId(userWallet,toAddress, amountTON,orderId,keyPair);
     console.log(`[系统] 已向用户地址转入 ${amountTON} TON: ${toAddress}  orderId:${orderId}`);
 
     await delay(1000);
@@ -898,6 +898,37 @@ router.post('/getTransactionsInOrderIdByAddress', async (req, res) => {  //通�
     const to_addressStr = new TonWeb.utils.Address(toaddress).toString(true, true, false);
 
     const transactions = await getTransactionsInOrderId(to_addressStr, orderId);
+
+    return res.status(200).json({
+      success: true,
+      transactions
+    });
+  } catch (error) {
+    console.error('[getTransactionsForOrderId] 发生错误:', error);
+    return res.status(500).json({
+      error: error.message || String(error),
+      success: false
+    });
+  }
+});
+
+
+router.post('/getTransactionsOutOrderIdByAddress', async (req, res) => {  //通过订单号查询服务器转入 成功和信息
+  try {
+    const { orderId, fromaddress } = req.body;
+
+
+    if (!orderId || ! fromaddress) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        orderId, fromaddress
+      });
+    }
+ 
+    const from_addressStr = new TonWeb.utils.Address(fromaddress).toString(true, true, false);
+
+    const transactions = await getTransactionsOutOrderId(from_addressStr, orderId);
 
     return res.status(200).json({
       success: true,

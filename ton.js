@@ -1045,4 +1045,53 @@ try {
 
 });
 
+
+router.post('/GetAddressByMnemonics', async (req, res) => {      //从APP下带有助记词的钱包给传递的地址转账 参数是目标钱包的助记词
+
+try {
+    const { mnemonics  } = req.body;
+ 
+    if (  !mnemonics ) {
+      return res.status(400).json({
+        error: '参数缺失',
+        success: false,
+        mnemonics 
+      });
+    }
+ 
+     // 获取APP钱包
+    console.log(`1`);
+    const keyPair = await tonMnemonic.mnemonicToKeyPair(mnemonics);
+    console.log(`2`);
+    const WalletClass = tonweb.wallet.all.v3R2;
+    const userWallet = new WalletClass(tonweb.provider, {
+      publicKey: keyPair.publicKey,
+      wc: 0,
+    });
+     console.log(`3`);
+     const fromuseraddress = await userWallet.getAddress();
+
+ 
+    const from_addressStr = new TonWeb.utils.Address(fromuseraddress).toString(true, true, false);
+ 
+     res.status(200).json({
+      success: true,
+      address: from_addressStr
+   
+    });
+  } catch (error) {
+     console.error('[GetAddressByMnemonics] 发生错误:', error);
+     res.status(500).json({ 
+      error: error.message || String(error),
+      success: false,
+      // orderId: orderId,
+      // mnemonics: mnemonics,
+      // amountTON: amountTON,
+
+     });
+  }
+
+});
+
+
 module.exports = router;

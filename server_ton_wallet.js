@@ -502,7 +502,7 @@ function safeBase64Decode(str) {
   }
 }
 
-async function getTransactionsInOrderId(serverAddress, orderId, limit = 20) {
+async function getTransactionsInOrderId(serverAddress, orderId, limit = 1) {
   try {
     // 构建 API 请求 URL
     const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
@@ -601,7 +601,7 @@ function parsePayloadFromBodyBase64(base64Body) {
   }
 }
 
-async function getTransactionsOutOrderId(serverAddress, orderId, limit = 20) {
+async function getTransactionsOutOrderId(serverAddress, orderId, limit = 1) {
   try {
     const url = `${process.env.TESTNET_TON_TRAN}?address=${serverAddress}&limit=${limit}&api_key=${process.env.TESTNET_API_KEY}`;
     console.log('请求 URL:', url);

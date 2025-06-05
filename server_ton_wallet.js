@@ -550,11 +550,11 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 3) {
       console.log('✔️ transaction utime:', tx.utime);
       return message.includes(orderId) || rawMessage.includes(orderId) || payload.includes(orderId);
     });
-
+    console.log('✔️ filteredTransactions 1 :', filteredTransactions);
     // 按时间戳排序（时间越近越前）
     filteredTransactions.sort((a, b) => b.utime - a.utime);
 
-    console.log('✔️ filteredTransactions:', filteredTransactions);
+    console.log('✔️ filteredTransactions 2 :', filteredTransactions);
  
     const transactionDetails = await Promise.all(filteredTransactions.map(async (tx) => {
       const inMsg = tx.in_msg || {};

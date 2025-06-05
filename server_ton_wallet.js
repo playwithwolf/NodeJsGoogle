@@ -547,7 +547,7 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 3) {
       console.log('✔️ rawMessage:', rawMessage);
       console.log('✔️ 解码后的 Message:', message);
       console.log('✔️ 解码后的 Payload:', payload);
-
+      console.log('✔️ transaction utime:', tx.utime);
       return message.includes(orderId) || rawMessage.includes(orderId) || payload.includes(orderId);
     });
 

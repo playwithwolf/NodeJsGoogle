@@ -553,6 +553,8 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 3) {
 
     // 按时间戳排序（时间越近越前）
     filteredTransactions.sort((a, b) => b.utime - a.utime);
+
+    console.log('✔️ filteredTransactions:', filteredTransactions);
  
     const transactionDetails = await Promise.all(filteredTransactions.map(async (tx) => {
       const inMsg = tx.in_msg || {};
@@ -578,7 +580,7 @@ async function getTransactionsInOrderId(serverAddress, orderId, limit = 3) {
         to: inMsg.destination || serverAddress,
       };
     }));
-
+    console.log('✔️ transactionDetails:', transactionDetails);
     return transactionDetails;
   } catch (err) {
     console.error('获取交易记录失败:', err);

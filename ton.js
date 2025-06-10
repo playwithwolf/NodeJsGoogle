@@ -820,6 +820,7 @@ router.post('/createAppTonPaymentLinkByMnemonics', async (req, res) => {  //ç”Ÿæ
         orderId, amountTON
       });
     }
+  console.log("to_address mnemonics= "+mnemonics)
   const to_address = await getAddressForWebByMnemonics(mnemonics);
   // const toAddress = new TonWeb.utils.Address(server_address).toString(true, true, false);
   //const toAddress = Address.parse(server_address).toString({ urlSafe: true, bounceable: false });

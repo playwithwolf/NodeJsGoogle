@@ -1072,7 +1072,7 @@ try {
      const fromuseraddress = await userWallet.getAddress();
 
  
-    const from_addressStr = new TonWeb.utils.Address(fromuseraddress).toString(true, true, true);
+    const from_addressStr = new TonWeb.utils.Address(fromuseraddress).toString(true, true, false);
  
      res.status(200).json({
       success: true,
